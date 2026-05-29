@@ -1,46 +1,126 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
 import EventMarker from './EventMarker';
+import { Billboard, Text } from '@react-three/drei';
 
 const GLOBE_RADIUS = 1.01;
+const CLUSTER_RADIUS_DEG = 8; // Grados de distancia para agrupar
+
+// Algoritmo ligero de Clustering por proximidad (Grid/Radio)
+function clusterEvents(events, radiusDeg) {
+  const clusters = [];
+  events.forEach(event => {
+    let clustered = false;
+    for (let cluster of clusters) {
+      const dx = cluster.center.lng - event.lng;
+      const dy = cluster.center.lat - event.lat;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance <= radiusDeg) {
+        cluster.events.push(event);
+        clustered = true;
+        break;
+      }
+    }
+    if (!clustered) {
+      clusters.push({
+        id: `cluster-${event.id}`,
+        center: { lat: event.lat, lng: event.lng },
+        events: [event],
+        type: event.type
+      });
+    }
+  });
+  return clusters;
+}
+
+function ClusterMarker({ cluster, color }) {
+  const pos = latLngToVector3(cluster.center.lat, cluster.center.lng, GLOBE_RADIUS);
+  const count = cluster.events.length;
+  
+  if (count === 1) {
+    const ev = cluster.events[0];
+    return <EventMarker key={ev.id} position={pos} color={color} size={ev.size} eventData={ev.data} />;
+  }
+  
+  return (
+    <group position={pos}>
+      <mesh>
+        <sphereGeometry args={[0.02 + (count * 0.001), 16, 16]} />
+        <meshBasicMaterial color={color} transparent={true} opacity={0.6} />
+      </mesh>
+      <Billboard position={[0, 0, 0.03]} raycast={() => null}>
+        <Text fontSize={0.03} color="white" outlineWidth={0.005} outlineColor="black" raycast={() => null}>
+          {count.toString()}
+        </Text>
+      </Billboard>
+    </group>
+  );
+}
 
 export default function Markers() {
-  const { earthquakes, eonetEvents, firmsFires } = useStore();
+  const { earthquakes, eonetEvents, firmsFires, timelineDate } = useStore();
 
-  const earthquakeMarkers = useMemo(() => {
-    return earthquakes.slice(0, 30).map((eq) => {
-      const coords = eq.geometry.coordinates; // [lng, lat, depth]
-      const pos = latLngToVector3(coords[1], coords[0], GLOBE_RADIUS);
-      const size = Math.max(0.005, (eq.properties.mag || 1) * 0.005);
-      return <EventMarker key={eq.id} position={pos} color="#ffd700" size={size} eventData={{ id: eq.id, type: 'Earthquake', title: eq.properties.place, date: eq.properties.time, mag: eq.properties.mag, pos: pos }} />;
-    });
-  }, [earthquakes]);
+  // EARTHQUAKES
+  const eqClusters = useMemo(() => {
+    const validEvents = earthquakes
+      .filter(eq => new Date(eq.properties.time).getTime() <= timelineDate)
+      .slice(0, 300)
+      .map(eq => {
+        const coords = eq.geometry.coordinates;
+        return {
+          id: eq.id,
+          type: 'Earthquake',
+          lat: coords[1],
+          lng: coords[0],
+          size: Math.max(0.005, (eq.properties.mag || 1) * 0.005),
+          data: { id: eq.id, type: 'Earthquake', title: eq.properties.place, date: eq.properties.time, mag: eq.properties.mag, pos: latLngToVector3(coords[1], coords[0], GLOBE_RADIUS), rawLat: coords[1], rawLng: coords[0] }
+        };
+      });
+    return clusterEvents(validEvents, CLUSTER_RADIUS_DEG);
+  }, [earthquakes, timelineDate]);
 
+  // FIRES
+  const fireClusters = useMemo(() => {
+    const validEvents = firmsFires
+      .filter(fire => new Date(fire.acq_date).getTime() <= timelineDate)
+      .slice(0, 500)
+      .filter(fire => fire.latitude && fire.longitude)
+      .map((fire, i) => {
+        return {
+          id: `fire-${i}`,
+          type: 'Fire',
+          lat: parseFloat(fire.latitude),
+          lng: parseFloat(fire.longitude),
+          size: 0.01,
+          data: { id: `fire-${i}`, type: 'Fire', title: 'Thermal Anomaly', date: fire.acq_date, pos: latLngToVector3(parseFloat(fire.latitude), parseFloat(fire.longitude), GLOBE_RADIUS), rawLat: parseFloat(fire.latitude), rawLng: parseFloat(fire.longitude) }
+        };
+      });
+    return clusterEvents(validEvents, CLUSTER_RADIUS_DEG);
+  }, [firmsFires, timelineDate]);
+
+  // STORMS (EONET) - Normalmente son pocas, no agrupamos pero filtramos
   const eonetMarkers = useMemo(() => {
-    return eonetEvents.slice(0, 30).map((ev) => {
-      if (!ev.geometries || ev.geometries.length === 0) return null;
-      const coords = ev.geometries[0].coordinates;
-      if (!Array.isArray(coords) || Array.isArray(coords[0])) return null; 
-      
-      const pos = latLngToVector3(coords[1], coords[0], GLOBE_RADIUS);
-      return <EventMarker key={ev.id} position={pos} color="#f97316" size={0.015} eventData={{ id: ev.id, type: 'Storm', title: ev.title, date: ev.geometries[0].date, pos: pos }} />;
-    });
-  }, [eonetEvents]);
+    return eonetEvents
+      .slice(0, 30)
+      .map((ev) => {
+        if (!ev.geometries || ev.geometries.length === 0) return null;
+        const coords = ev.geometries[0].coordinates;
+        if (!Array.isArray(coords) || Array.isArray(coords[0])) return null; 
+        
+        const eventTime = new Date(ev.geometries[0].date).getTime();
+        if (eventTime > timelineDate) return null;
 
-  const fireMarkers = useMemo(() => {
-    return firmsFires.slice(0, 50).map((fire, i) => {
-      if (!fire.latitude || !fire.longitude) return null;
-      const pos = latLngToVector3(parseFloat(fire.latitude), parseFloat(fire.longitude), GLOBE_RADIUS);
-      return <EventMarker key={`fire-${i}`} position={pos} color="#ef4444" size={0.01} eventData={{ id: `fire-${i}`, type: 'Fire', title: 'Thermal Anomaly', date: fire.acq_date, pos: pos }} />;
-    });
-  }, [firmsFires]);
+        const pos = latLngToVector3(coords[1], coords[0], GLOBE_RADIUS);
+        return <EventMarker key={ev.id} position={pos} color="#f97316" size={0.015} eventData={{ id: ev.id, type: 'Storm', title: ev.title, date: ev.geometries[0].date, pos: pos, rawLat: coords[1], rawLng: coords[0] }} />;
+      });
+  }, [eonetEvents, timelineDate]);
 
   return (
     <group>
-      {earthquakeMarkers}
+      {eqClusters.map(c => <ClusterMarker key={c.id} cluster={c} color="#ffd700" />)}
+      {fireClusters.map(c => <ClusterMarker key={c.id} cluster={c} color="#ef4444" />)}
       {eonetMarkers}
-      {fireMarkers}
     </group>
   );
 }

@@ -6,6 +6,7 @@ import { useStore } from './store/useStore';
 import { latLngToVector3 } from './utils/geoToVector3';
 import Sidebar from './components/Sidebar';
 import CountryPanel from './components/CountryPanel';
+import Timeline from './components/Timeline';
 
 function App() {
   const isLoading = useStore(state => state.isLoading);
@@ -16,6 +17,9 @@ function App() {
   const toggleRotation = useStore(state => state.toggleRotation);
   const lightingMode = useStore(state => state.lightingMode);
   const toggleLighting = useStore(state => state.toggleLighting);
+  const searchQuery = useStore(state => state.searchQuery);
+  const setSearchQuery = useStore(state => state.setSearchQuery);
+  const timelineDate = useStore(state => state.timelineDate);
 
   useEffect(() => {
     fetchAllData();
@@ -47,6 +51,7 @@ function App() {
         {/* Overlays Absolutos */}
         <Sidebar />
         <CountryPanel />
+        <Timeline />
         
         {/* Header - Interactive */}
         <header className="h-16 border-b border-slate-800 glass-panel m-4 mb-2 flex items-center px-6 justify-between pointer-events-auto shrink-0">
@@ -68,20 +73,53 @@ function App() {
           
           {/* Left Panel: Active Events - Interactive */}
           <aside className="w-80 h-full glass-panel flex flex-col overflow-hidden pointer-events-auto shrink-0">
-            <div className="p-4 border-b border-slate-800 shrink-0">
+            <div className="p-4 border-b border-slate-800 shrink-0 flex flex-col gap-3">
               <h2 className="tech-text text-slate-300">ACTIVE_EVENTS_FEED</h2>
+              <input 
+                type="text" 
+                placeholder="Buscar país o región..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-900/60 border border-slate-700 text-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+              />
+              
+              {/* Global Stats */}
+              {!isLoading && (
+                <div className="grid grid-cols-2 gap-2 text-xs mt-1">
+                  <div className="bg-slate-900/40 p-2 rounded border border-slate-800">
+                    <div className="text-slate-500 mb-1">TOTAL SISMOS</div>
+                    <div className="text-orange-400 font-bold text-lg">{earthquakes.length}</div>
+                  </div>
+                  <div className="bg-slate-900/40 p-2 rounded border border-slate-800">
+                    <div className="text-slate-500 mb-1">MAX MAGNITUD</div>
+                    <div className="text-red-400 font-bold text-lg">
+                      {earthquakes.length > 0 ? Math.max(...earthquakes.map(eq => eq.properties.mag || 0)).toFixed(1) : 0}
+                    </div>
+                  </div>
+                  <div className="bg-slate-900/40 p-2 rounded border border-slate-800">
+                    <div className="text-slate-500 mb-1">ANOMALÍAS TÉRMICAS</div>
+                    <div className="text-rose-500 font-bold text-lg">{useStore.getState().firmsFires.length}</div>
+                  </div>
+                  <div className="bg-slate-900/40 p-2 rounded border border-slate-800">
+                    <div className="text-slate-500 mb-1">TORMENTAS ACTIVAS</div>
+                    <div className="text-blue-400 font-bold text-lg">{eonetEvents.length}</div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex-1 p-4 overflow-y-auto tech-text text-xs space-y-3">
               {isLoading && earthquakes.length === 0 ? (
                 <div className="text-slate-500 animate-pulse">[WAITING_FOR_DATA_STREAM...]</div>
               ) : (
                 <>
-                  {earthquakes.slice(0, 15).map((eq) => (
+                  {earthquakes
+                    .filter(eq => eq.properties.place.toLowerCase().includes(searchQuery.toLowerCase()) && new Date(eq.properties.time).getTime() <= timelineDate)
+                    .slice(0, 50).map((eq) => (
                     <div key={eq.id} 
                          onClick={() => {
                            const [lng, lat] = eq.geometry.coordinates;
                            const pos = latLngToVector3(parseFloat(lat), parseFloat(lng), 1.01);
-                           setSelectedEvent({ id: eq.id, type: 'Earthquake', title: eq.properties.place, date: eq.properties.time, mag: eq.properties.mag, pos });
+                           setSelectedEvent({ id: eq.id, type: 'Earthquake', title: eq.properties.place, date: eq.properties.time, mag: eq.properties.mag, pos, rawLat: parseFloat(lat), rawLng: parseFloat(lng) });
                            
                            // Extraer el país o región del texto (después de la última coma)
                            const placeParts = eq.properties.place.split(',');
@@ -97,7 +135,9 @@ function App() {
                       <div className="text-slate-400 truncate" title={eq.properties.place}>{eq.properties.place}</div>
                     </div>
                   ))}
-                  {eonetEvents.slice(0, 10).map((ev) => (
+                  {eonetEvents
+                    .filter(ev => ev.title.toLowerCase().includes(searchQuery.toLowerCase()) && ev.geometries?.[0] && new Date(ev.geometries[0].date).getTime() <= timelineDate)
+                    .slice(0, 20).map((ev) => (
                     <div key={ev.id} 
                          onClick={() => {
                            const coords = ev.geometries?.[0]?.coordinates;
@@ -105,7 +145,7 @@ function App() {
                            let firstPt = coords;
                            while(Array.isArray(firstPt[0])) { firstPt = firstPt[0]; }
                            const pos = latLngToVector3(parseFloat(firstPt[1]), parseFloat(firstPt[0]), 1.01);
-                           setSelectedEvent({ id: ev.id, type: 'Storm', title: ev.title, date: ev.geometries[0].date, pos });
+                           setSelectedEvent({ id: ev.id, type: 'Storm', title: ev.title, date: ev.geometries[0].date, pos, rawLat: parseFloat(firstPt[1]), rawLng: parseFloat(firstPt[0]) });
                            
                            // Extraer región para eventos meteorológicos
                            useStore.getState().setSelectedCountry(ev.title);

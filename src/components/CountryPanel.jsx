@@ -7,6 +7,7 @@ export default function CountryPanel() {
   const clearSelectedCountry = useStore(state => state.clearSelectedCountry);
   const earthquakes = useStore(state => state.earthquakes);
   const setSelectedEvent = useStore(state => state.setSelectedEvent);
+  const timelineDate = useStore(state => state.timelineDate);
 
   // Estados para el arrastre (Drag & Drop)
   const [position, setPosition] = useState({ 
@@ -55,10 +56,28 @@ export default function CountryPanel() {
 
   if (!selectedCountry) return null;
 
-  // Filtrar terremotos que ocurrieron en este país
-  const countryEvents = earthquakes.filter(eq => 
-    eq.properties.place && eq.properties.place.toLowerCase().includes(selectedCountry.toLowerCase())
-  );
+  // Filtrar terremotos que ocurrieron en este país (respetando la línea de tiempo)
+  const countryEvents = earthquakes.filter(eq => {
+    if (new Date(eq.properties.time).getTime() > timelineDate) return false;
+    
+    const place = eq.properties.place ? eq.properties.place.toLowerCase() : "";
+    const countryQuery = selectedCountry.toLowerCase();
+    
+    if (place.includes(countryQuery)) return true;
+    
+    // Parche especial para Estados Unidos, ya que el USGS usa nombres/abreviaturas de estados
+    // en lugar de escribir "United States" explícitamente en el campo 'place'.
+    if (countryQuery === "united states" || countryQuery === "usa") {
+      const [lng, lat] = eq.geometry.coordinates;
+      const inContiguousUS = lat >= 24 && lat <= 50 && lng >= -125 && lng <= -65;
+      const inAlaska = lat >= 51 && lat <= 72 && lng >= -180 && lng <= -130;
+      const inHawaii = lat >= 18 && lat <= 23 && lng >= -161 && lng <= -154;
+      
+      if (inContiguousUS || inAlaska || inHawaii) return true;
+    }
+    
+    return false;
+  });
 
   return (
     <div 
