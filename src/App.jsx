@@ -8,6 +8,13 @@ import Sidebar from './components/Sidebar';
 import CountryPanel from './components/CountryPanel';
 import Timeline from './components/Timeline';
 
+function getEventStyles(mag) {
+  if (mag >= 6.0) return { border: 'border-red-600', text: 'text-red-500', bg: 'bg-red-950/20 hover:bg-red-900/40' };
+  if (mag >= 4.5) return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
+  if (mag >= 2.5) return { border: 'border-yellow-500', text: 'text-yellow-400', bg: 'bg-yellow-950/20 hover:bg-yellow-900/30' };
+  return { border: 'border-emerald-500', text: 'text-emerald-400', bg: 'bg-emerald-950/20 hover:bg-emerald-900/30' };
+}
+
 function App() {
   const isLoading = useStore(state => state.isLoading);
   const earthquakes = useStore(state => state.earthquakes);
@@ -114,27 +121,30 @@ function App() {
                 <>
                   {earthquakes
                     .filter(eq => eq.properties.place.toLowerCase().includes(searchQuery.toLowerCase()) && new Date(eq.properties.time).getTime() <= timelineDate)
-                    .slice(0, 50).map((eq) => (
-                    <div key={eq.id} 
-                         onClick={() => {
-                           const [lng, lat] = eq.geometry.coordinates;
-                           const pos = latLngToVector3(parseFloat(lat), parseFloat(lng), 1.01);
-                           setSelectedEvent({ id: eq.id, type: 'Earthquake', title: eq.properties.place, date: eq.properties.time, mag: eq.properties.mag, pos, rawLat: parseFloat(lat), rawLng: parseFloat(lng) });
-                           
-                           // Extraer el país o región del texto (después de la última coma)
-                           const placeParts = eq.properties.place.split(',');
-                           if (placeParts.length > 1) {
-                             const region = placeParts.pop().trim();
-                             useStore.getState().setSelectedCountry(region);
-                           } else {
-                             useStore.getState().setSelectedCountry(eq.properties.place.trim());
-                           }
-                         }}
-                         className="border-l-2 border-orange-500 pl-2 py-1 bg-slate-900/40 hover:bg-slate-800/60 transition-colors cursor-pointer active:scale-95">
-                      <div className="text-orange-400 font-bold">MAG {eq.properties.mag}</div>
-                      <div className="text-slate-400 truncate" title={eq.properties.place}>{eq.properties.place}</div>
-                    </div>
-                  ))}
+                    .slice(0, 50).map((eq) => {
+                      const styles = getEventStyles(eq.properties.mag || 0);
+                      return (
+                        <div key={eq.id} 
+                             onClick={() => {
+                               const [lng, lat] = eq.geometry.coordinates;
+                               const pos = latLngToVector3(parseFloat(lat), parseFloat(lng), 1.01);
+                               setSelectedEvent({ id: eq.id, type: 'Earthquake', title: eq.properties.place, date: eq.properties.time, mag: eq.properties.mag, pos, rawLat: parseFloat(lat), rawLng: parseFloat(lng) });
+                               
+                               // Extraer el país o región del texto (después de la última coma)
+                               const placeParts = eq.properties.place.split(',');
+                               if (placeParts.length > 1) {
+                                 const region = placeParts.pop().trim();
+                                 useStore.getState().setSelectedCountry(region);
+                               } else {
+                                 useStore.getState().setSelectedCountry(eq.properties.place.trim());
+                               }
+                             }}
+                             className={`border-l-4 ${styles.border} pl-3 py-2 ${styles.bg} rounded-r-md transition-colors cursor-pointer active:scale-95 mb-2`}>
+                          <div className={`${styles.text} font-bold text-[11px]`}>MAG {eq.properties.mag}</div>
+                          <div className="text-slate-300 truncate" title={eq.properties.place}>{eq.properties.place}</div>
+                        </div>
+                      );
+                  })}
                   {eonetEvents
                     .filter(ev => ev.title.toLowerCase().includes(searchQuery.toLowerCase()) && ev.geometries?.[0] && new Date(ev.geometries[0].date).getTime() <= timelineDate)
                     .slice(0, 20).map((ev) => (
@@ -150,9 +160,9 @@ function App() {
                            // Extraer región para eventos meteorológicos
                            useStore.getState().setSelectedCountry(ev.title);
                          }}
-                         className="border-l-2 border-blue-500 pl-2 py-1 bg-slate-900/40 hover:bg-slate-800/60 transition-colors cursor-pointer active:scale-95">
-                      <div className="text-blue-400 font-bold">{ev.categories[0]?.title || 'EVENT'}</div>
-                      <div className="text-slate-400 truncate" title={ev.title}>{ev.title}</div>
+                         className="border-l-4 border-blue-500 pl-3 py-2 bg-blue-950/20 hover:bg-blue-900/30 rounded-r-md transition-colors cursor-pointer active:scale-95 mb-2">
+                      <div className="text-blue-400 font-bold text-[11px] uppercase">{ev.categories[0]?.title || 'EVENT'}</div>
+                      <div className="text-slate-300 truncate" title={ev.title}>{ev.title}</div>
                     </div>
                   ))}
                 </>

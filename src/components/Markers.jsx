@@ -34,20 +34,49 @@ function clusterEvents(events, radiusDeg) {
   return clusters;
 }
 
-function ClusterMarker({ cluster, color }) {
+function getEventColor(event) {
+  if (event.type === 'Fire') return '#ef4444'; // Rojo para incendios
+  if (event.type === 'Storm') return '#3b82f6'; // Azul para tormentas
+  
+  // Sismos por magnitud
+  const mag = event.data?.mag || 0;
+  if (mag >= 6.0) return '#dc2626'; // Rojo oscuro para críticos
+  if (mag >= 4.5) return '#f97316'; // Naranja para fuertes
+  if (mag >= 2.5) return '#eab308'; // Amarillo para moderados
+  return '#10b981'; // Verde para leves
+}
+
+function ClusterMarker({ cluster }) {
   const pos = latLngToVector3(cluster.center.lat, cluster.center.lng, GLOBE_RADIUS);
   const count = cluster.events.length;
   
+  // Si es un solo evento, usamos su color específico
   if (count === 1) {
     const ev = cluster.events[0];
+    const color = getEventColor(ev);
     return <EventMarker key={ev.id} position={pos} color={color} size={ev.size} eventData={ev.data} />;
   }
   
+  // Si es un clúster, calculamos el color basado en el evento más peligroso del clúster
+  let maxMag = 0;
+  cluster.events.forEach(ev => {
+    if (ev.type === 'Earthquake' && ev.data?.mag > maxMag) {
+      maxMag = ev.data.mag;
+    }
+  });
+  
+  // Asignar el color del clúster basado en el peor sismo (o rojo si es fuego)
+  let clusterColor = '#ffd700';
+  if (cluster.type === 'Fire') clusterColor = '#ef4444';
+  else if (cluster.type === 'Earthquake') {
+    clusterColor = getEventColor({ type: 'Earthquake', data: { mag: maxMag } });
+  }
+
   return (
     <group position={pos}>
       <mesh>
         <sphereGeometry args={[0.02 + (count * 0.001), 16, 16]} />
-        <meshBasicMaterial color={color} transparent={true} opacity={0.6} />
+        <meshBasicMaterial color={clusterColor} transparent={true} opacity={0.6} />
       </mesh>
       <Billboard position={[0, 0, 0.03]} raycast={() => null}>
         <Text fontSize={0.03} color="white" outlineWidth={0.005} outlineColor="black" raycast={() => null}>
