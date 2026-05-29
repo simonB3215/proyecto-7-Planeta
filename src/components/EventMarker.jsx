@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
 import { useStore } from '../store/useStore';
 import * as THREE from 'three';
 
@@ -69,25 +68,6 @@ export default function EventMarker({ position, color, size, eventData }) {
             opacity={0.8} 
           />
         </mesh>
-      )}
-
-      {isSelected && (
-        <Html transform sprite distanceFactor={1.5} position={[0, 0.1, 0]}>
-          <div className="w-64 bg-gray-900/90 backdrop-blur-md border border-orange-500 p-3 rounded-lg text-xs font-mono text-white">
-            <div className="flex justify-between items-start border-b border-gray-800 pb-2 mb-2">
-              <h3 className="text-yellow-500 font-bold tracking-widest text-sm">{eventData.type.toUpperCase()}</h3>
-              <button 
-                onClick={(e) => { e.stopPropagation(); clearSelectedEvent(); }} 
-                className="text-gray-500 hover:text-white transition-colors text-xs"
-              >
-                X
-              </button>
-            </div>
-            <div className="text-gray-300 mb-2 truncate" title={eventData.title}>{eventData.title}</div>
-            {eventData.date && <div className="text-gray-500 text-[10px]">TIME: {new Date(eventData.date).toLocaleString()}</div>}
-            {eventData.mag && <div className="text-orange-400 font-bold mt-1 text-sm">MAG: {eventData.mag}</div>}
-          </div>
-        </Html>
       )}
     </group>
   );
