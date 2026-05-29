@@ -45,7 +45,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="absolute top-4 right-4 z-10 w-80 pointer-events-auto bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-5 font-sans text-white shadow-2xl">
+    <div className="w-80 pointer-events-auto bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-5 font-sans text-white shadow-2xl shrink-0">
       <div className="flex justify-between items-center border-b border-gray-700 pb-3 mb-4">
         <h2 className="text-lg font-semibold text-gray-100">Detalles del Evento</h2>
         <button 

@@ -55,8 +55,10 @@ function App() {
       <div className="absolute inset-0 z-10 pointer-events-none flex flex-col">
         
         {/* Overlays Absolutos */}
-        <Sidebar />
-        <CountryPanel />
+        <div className="absolute top-4 right-4 z-20 flex flex-col gap-4 pointer-events-none items-end max-h-screen">
+          <Sidebar />
+          <CountryPanel />
+        </div>
         
         {/* Header - Interactive */}
         <header className="h-16 border-b border-slate-800 glass-panel m-4 mb-2 flex items-center px-6 justify-between pointer-events-auto shrink-0">

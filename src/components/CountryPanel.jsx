@@ -18,50 +18,7 @@ export default function CountryPanel() {
   const setSelectedEvent = useStore(state => state.setSelectedEvent);
   const timelineDate = useStore(state => state.timelineDate);
 
-  // Estados para el arrastre (Drag & Drop)
-  const [position, setPosition] = useState({ 
-    x: window.innerWidth - 340, 
-    y: 80 
-  });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef({ startX: 0, startY: 0, initialPosX: 0, initialPosY: 0 });
-
-  useEffect(() => {
-    const handlePointerMove = (e) => {
-      if (!isDragging) return;
-      const dx = e.clientX - dragRef.current.startX;
-      const dy = e.clientY - dragRef.current.startY;
-      setPosition({
-        x: dragRef.current.initialPosX + dx,
-        y: dragRef.current.initialPosY + dy
-      });
-    };
-
-    const handlePointerUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      window.addEventListener('pointermove', handlePointerMove);
-      window.addEventListener('pointerup', handlePointerUp);
-    }
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [isDragging]);
-
-  const handlePointerDown = (e) => {
-    // Evitar que el clic en el botón de cerrar inicie el drag
-    if (e.target.tagName.toLowerCase() === 'button') return;
-    setIsDragging(true);
-    dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      initialPosX: position.x,
-      initialPosY: position.y
-    };
-  };
+  const [isExpanded, setIsExpanded] = useState(true);
 
   if (!selectedCountry) return null;
 
@@ -121,12 +78,10 @@ export default function CountryPanel() {
 
   return (
     <div 
-      className="absolute z-20 w-80 bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col max-h-[50vh]"
-      style={{ left: position.x, top: position.y }}
+      className={`w-80 bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col transition-all duration-300 shrink-0 ${isExpanded ? 'max-h-[50vh]' : 'max-h-[85px]'}`}
     >
       <div 
-        className="bg-slate-900/90 p-4 border-b border-slate-700 flex justify-between items-center shrink-0 cursor-move select-none"
-        onPointerDown={handlePointerDown}
+        className="bg-slate-900/90 p-4 border-b border-slate-700 flex justify-between items-center shrink-0 select-none h-[85px]"
       >
         <div className="pointer-events-none">
           <h2 className="text-xl font-bold text-white tracking-wide">{selectedCountry}</h2>
@@ -134,13 +89,25 @@ export default function CountryPanel() {
             REGISTROS RECIENTES: <span className={countryEvents.length > 0 ? "text-red-400 font-bold" : "text-emerald-400 font-bold"}>{countryEvents.length}</span>
           </p>
         </div>
-        <button 
-          onClick={clearSelectedCountry}
-          className="text-slate-400 hover:text-white transition-colors w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-lg z-10"
-        >
-          ✕
-        </button>
+        <div className="flex gap-1 z-10">
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-slate-400 hover:text-white transition-colors w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-lg"
+            title={isExpanded ? "Minimizar" : "Expandir"}
+          >
+            {isExpanded ? '−' : '＋'}
+          </button>
+          <button 
+            onClick={clearSelectedCountry}
+            className="text-slate-400 hover:text-white transition-colors w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-lg"
+            title="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
       </div>
+
+      {isExpanded && (
 
       <div className="p-4 overflow-y-auto space-y-3 flex-1 min-h-0 bg-slate-950/50">
         {countryEvents.length === 0 ? (
@@ -235,6 +202,7 @@ export default function CountryPanel() {
           })
         )}
       </div>
+      )}
     </div>
   );
 }
