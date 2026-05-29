@@ -40,6 +40,26 @@ export default function Globe() {
     return [x, y, z];
   }, [lightingMode]); // Recalcular solo cuando se cambia el modo para actualizar la luz
   
+  // Generar textura fotorealista del Sol por código (sin descargar imágenes extra)
+  const sunTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const context = canvas.getContext('2d');
+    
+    // Gradiente radial para simular un "Lens Flare" o destello óptico
+    const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');     // Núcleo hiper-brillante
+    gradient.addColorStop(0.1, 'rgba(255, 240, 180, 0.8)'); // Corona cálida
+    gradient.addColorStop(0.4, 'rgba(255, 150, 50, 0.3)');  // Halo naranja esparcido
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');           // Bordes difuminados al vacío
+    
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 256, 256);
+    
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
   // Usaremos texturas públicas de Three.js para la Tierra y Nubes
   const [colorMap, bumpMap, cloudMap, nightMap] = useLoader(THREE.TextureLoader, [
     'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
@@ -147,10 +167,33 @@ export default function Globe() {
 
         {/* Luz direccional anclada a la rotación geográfica del globo (Tiempo Real) */}
         {lightingMode === 'realtime' && (
-          <directionalLight 
-            position={sunPosition} 
-            intensity={4} 
-          />
+          <>
+            <directionalLight 
+              position={sunPosition} 
+              intensity={4} 
+            />
+            
+            {/* Sprite fotorealista del Sol (Glow Extendido) */}
+            <sprite position={sunPosition} scale={[25, 25, 1]}>
+              <spriteMaterial 
+                map={sunTexture} 
+                blending={THREE.AdditiveBlending}
+                transparent={true}
+                depthWrite={false}
+              />
+            </sprite>
+            
+            {/* Sprite fotorealista del Sol (Núcleo Intenso) */}
+            <sprite position={sunPosition} scale={[8, 8, 1]}>
+              <spriteMaterial 
+                map={sunTexture} 
+                blending={THREE.AdditiveBlending}
+                transparent={true}
+                depthWrite={false}
+                opacity={0.8}
+              />
+            </sprite>
+          </>
         )}
 
         {/* Capa de Nubes (Estética) */}
