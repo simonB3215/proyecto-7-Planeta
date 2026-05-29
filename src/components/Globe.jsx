@@ -3,9 +3,11 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import Markers from './Markers';
+import CameraController from './CameraController';
 
 export default function Globe() {
   const globeRef = useRef();
+  const controlsRef = useRef();
   
   // Usaremos texturas públicas de Three.js para la Tierra
   const [colorMap, bumpMap] = useLoader(THREE.TextureLoader, [
@@ -24,7 +26,10 @@ export default function Globe() {
       <ambientLight intensity={3} />
       <directionalLight position={[10, 10, 10]} intensity={1.5} />
       
+      <CameraController controlsRef={controlsRef} />
+      
       <OrbitControls 
+        ref={controlsRef}
         enablePan={false}
         enableZoom={true}
         minDistance={1.2}
@@ -32,7 +37,7 @@ export default function Globe() {
         autoRotate={false}
       />
       
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+      <Stars radius={100} depth={50} count={1500} factor={4} saturation={0} fade speed={0} />
       
       <group ref={globeRef}>
         <mesh>
@@ -42,6 +47,17 @@ export default function Globe() {
             normalMap={bumpMap}
             metalness={0.1}
             roughness={0.7}
+          />
+        </mesh>
+
+        {/* Halo Atmosférico */}
+        <mesh>
+          <sphereGeometry args={[1.02, 64, 64]} />
+          <meshBasicMaterial 
+            color="#4ea8ff" 
+            transparent={true} 
+            opacity={0.15} 
+            side={THREE.BackSide} 
           />
         </mesh>
         

@@ -3,13 +3,13 @@ import { Canvas } from '@react-three/fiber';
 import Globe from './components/Globe';
 import { fetchAllData } from './services/apiServices';
 import { useStore } from './store/useStore';
-import Sidebar from './components/Sidebar';
+import { latLngToVector3 } from './utils/geoToVector3';
 
 function App() {
   const isLoading = useStore(state => state.isLoading);
   const earthquakes = useStore(state => state.earthquakes);
   const eonetEvents = useStore(state => state.eonetEvents);
-  const setTargetLocation = useStore(state => state.setTargetLocation);
+  const setSelectedEvent = useStore(state => state.setSelectedEvent);
 
   useEffect(() => {
     fetchAllData();
@@ -69,7 +69,8 @@ function App() {
                     <div key={eq.id} 
                          onClick={() => {
                            const [lng, lat] = eq.geometry.coordinates;
-                           setTargetLocation(parseFloat(lat), parseFloat(lng));
+                           const pos = latLngToVector3(parseFloat(lat), parseFloat(lng), 1.01);
+                           setSelectedEvent({ id: eq.id, type: 'Earthquake', title: eq.properties.place, date: eq.properties.time, mag: eq.properties.mag, pos });
                          }}
                          className="border-l-2 border-orange-500 pl-2 py-1 bg-slate-900/40 hover:bg-slate-800/60 transition-colors cursor-pointer active:scale-95">
                       <div className="text-orange-400 font-bold">MAG {eq.properties.mag}</div>
@@ -83,7 +84,8 @@ function App() {
                            if (!coords) return;
                            let firstPt = coords;
                            while(Array.isArray(firstPt[0])) { firstPt = firstPt[0]; }
-                           setTargetLocation(parseFloat(firstPt[1]), parseFloat(firstPt[0]));
+                           const pos = latLngToVector3(parseFloat(firstPt[1]), parseFloat(firstPt[0]), 1.01);
+                           setSelectedEvent({ id: ev.id, type: 'Storm', title: ev.title, date: ev.geometries[0].date, pos });
                          }}
                          className="border-l-2 border-blue-500 pl-2 py-1 bg-slate-900/40 hover:bg-slate-800/60 transition-colors cursor-pointer active:scale-95">
                       <div className="text-blue-400 font-bold">{ev.categories[0]?.title || 'EVENT'}</div>
@@ -94,9 +96,6 @@ function App() {
               )}
             </div>
           </aside>
-
-          {/* Right Panel: Selected Event Details - Interactive */}
-          <Sidebar />
 
         </main>
       </div>
