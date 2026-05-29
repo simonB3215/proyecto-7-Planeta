@@ -7,37 +7,87 @@ export default function Sidebar() {
 
   if (!selectedEvent) return null;
 
+  const getMagnitudeDescription = (mag) => {
+    if (!mag) return null;
+    const num = parseFloat(mag);
+    if (num < 3.0) return "Sismo imperceptible";
+    if (num >= 3.0 && num < 5.0) return "Sismo leve";
+    if (num >= 5.0 && num < 7.0) return "Sismo moderado";
+    return "Terremoto severo";
+  };
+
+  const getMagnitudeColor = (mag) => {
+    if (!mag) return "text-gray-300";
+    const num = parseFloat(mag);
+    if (num < 3.0) return "text-gray-400";
+    if (num >= 3.0 && num < 5.0) return "text-yellow-400";
+    if (num >= 5.0 && num < 7.0) return "text-orange-400";
+    return "text-red-500 font-bold";
+  };
+
+  const formatEventType = (type) => {
+    if (type.toLowerCase() === 'earthquake') return 'Actividad Sísmica';
+    if (type.toLowerCase() === 'fire') return 'Anomalía Térmica / Incendio';
+    if (type.toLowerCase() === 'storm') return 'Tormenta / Clima Severo';
+    return type;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      month: 'long', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+  };
+
   return (
-    <div className="absolute top-4 right-4 z-10 w-80 pointer-events-auto bg-gray-950/80 backdrop-blur-md border border-orange-500 rounded-lg p-4 font-mono text-white shadow-2xl">
-      <div className="flex justify-between items-start border-b border-gray-800 pb-2 mb-4">
-        <h2 className="text-yellow-500 font-bold tracking-widest text-sm">TARGET_LOCKED</h2>
+    <div className="absolute top-4 right-4 z-10 w-80 pointer-events-auto bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-5 font-sans text-white shadow-2xl">
+      <div className="flex justify-between items-center border-b border-gray-700 pb-3 mb-4">
+        <h2 className="text-lg font-semibold text-gray-100">Detalles del Evento</h2>
         <button 
           onClick={clearSelectedEvent}
-          className="text-gray-500 hover:text-white transition-colors text-xs font-bold"
+          className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-md hover:bg-gray-800"
+          title="Cerrar panel"
         >
-          [CERRAR]
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
       
-      <div className="space-y-4 text-xs">
-        <div className="border-l-2 border-orange-500 pl-2 py-1 bg-gray-900/40">
-          <div className="text-orange-400 font-bold mb-1">TYPE: {selectedEvent.type.toUpperCase()}</div>
-          <div className="text-gray-300">{selectedEvent.title}</div>
+      <div className="space-y-4 text-sm">
+        <div className="bg-gray-800/40 p-3 rounded-md border border-gray-700/50">
+          <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Tipo de Evento</div>
+          <div className="font-medium text-gray-100">{formatEventType(selectedEvent.type)}</div>
+        </div>
+
+        <div className="bg-gray-800/40 p-3 rounded-md border border-gray-700/50">
+          <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Ubicación</div>
+          <div className="text-gray-200 capitalize leading-snug">{selectedEvent.title?.toLowerCase()}</div>
         </div>
         
         {selectedEvent.date && (
-          <div className="flex justify-between border-b border-gray-800/50 pb-2">
-            <span className="text-gray-500">TIMESTAMP</span>
-            <span className="text-gray-300 text-right">
-              {new Date(selectedEvent.date).toLocaleString()}
-            </span>
+          <div className="bg-gray-800/40 p-3 rounded-md border border-gray-700/50">
+            <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Fecha de registro</div>
+            <div className="text-gray-200">
+              {formatDate(selectedEvent.date)}
+            </div>
           </div>
         )}
         
         {selectedEvent.mag && (
-          <div className="flex justify-between border-b border-gray-800/50 pb-2">
-            <span className="text-gray-500">MAGNITUDE</span>
-            <span className="text-orange-400 font-bold">{selectedEvent.mag}</span>
+          <div className="bg-gray-800/40 p-3 rounded-md border border-gray-700/50">
+            <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Intensidad</div>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`font-mono text-xl ${getMagnitudeColor(selectedEvent.mag)}`}>
+                {parseFloat(selectedEvent.mag).toFixed(1)}
+              </span>
+              <span className="text-gray-300">({getMagnitudeDescription(selectedEvent.mag)})</span>
+            </div>
           </div>
         )}
       </div>

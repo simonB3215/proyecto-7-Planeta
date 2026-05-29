@@ -26,7 +26,7 @@ export default function Globe() {
       <ambientLight intensity={3} />
       <directionalLight position={[10, 10, 10]} intensity={1.5} />
       
-      <CameraController controlsRef={controlsRef} />
+      <CameraController controlsRef={controlsRef} globeRef={globeRef} />
       
       <OrbitControls 
         ref={controlsRef}
