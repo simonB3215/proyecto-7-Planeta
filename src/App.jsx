@@ -4,6 +4,7 @@ import Globe from './components/Globe';
 import { fetchAllData } from './services/apiServices';
 import { useStore } from './store/useStore';
 import { latLngToVector3 } from './utils/geoToVector3';
+import Sidebar from './components/Sidebar';
 
 function App() {
   const isLoading = useStore(state => state.isLoading);
@@ -37,6 +38,10 @@ function App() {
 
       {/* UI Layer (Z-10) - pointer-events-none */}
       <div className="absolute inset-0 z-10 pointer-events-none flex flex-col">
+        
+        {/* Right Panel Overlay */}
+        <Sidebar />
+        
         {/* Header - Interactive */}
         <header className="h-16 border-b border-slate-800 glass-panel m-4 mb-2 flex items-center px-6 justify-between pointer-events-auto shrink-0">
           <div className="flex items-center gap-4">

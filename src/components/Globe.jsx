@@ -33,13 +33,15 @@ export default function Globe() {
         enablePan={false}
         enableZoom={true}
         minDistance={1.2}
-        maxDistance={5}
+        maxDistance={4}
+        enableDamping={true}
+        dampingFactor={0.05}
         autoRotate={false}
       />
       
       <Stars radius={100} depth={50} count={1500} factor={4} saturation={0} fade speed={0} />
       
-      <group ref={globeRef}>
+      <group ref={globeRef} position={[0, 0, 0]}>
         <mesh>
           <sphereGeometry args={[1, 64, 64]} />
           <meshStandardMaterial 
