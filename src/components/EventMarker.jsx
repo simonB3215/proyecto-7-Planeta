@@ -72,8 +72,8 @@ export default function EventMarker({ position, color, size, eventData }) {
       )}
 
       {isSelected && (
-        <Html transform sprite distanceFactor={1.5} position={[0, 0, 0]} zIndexRange={[100, 0]} occlude>
-          <div className="bg-gray-900/80 backdrop-blur-md border border-orange-500/50 p-3 rounded-lg text-white font-mono text-xs w-64 pointer-events-auto shadow-2xl">
+        <Html transform sprite distanceFactor={1.5} position={[0, 0.1, 0]}>
+          <div className="w-64 bg-gray-900/90 backdrop-blur-md border border-orange-500 p-3 rounded-lg text-xs font-mono text-white">
             <div className="flex justify-between items-start border-b border-gray-800 pb-2 mb-2">
               <h3 className="text-yellow-500 font-bold tracking-widest text-sm">{eventData.type.toUpperCase()}</h3>
               <button 
