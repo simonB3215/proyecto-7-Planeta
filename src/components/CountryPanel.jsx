@@ -3,10 +3,7 @@ import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
 
 function getEventStyles(mag) {
-  if (mag >= 6.0) return { border: 'border-red-600', text: 'text-red-500', bg: 'bg-red-950/20 hover:bg-red-900/40' };
-  if (mag >= 4.5) return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
-  if (mag >= 2.5) return { border: 'border-yellow-500', text: 'text-yellow-400', bg: 'bg-yellow-950/20 hover:bg-yellow-900/30' };
-  return { border: 'border-emerald-500', text: 'text-emerald-400', bg: 'bg-emerald-950/20 hover:bg-emerald-900/30' };
+  return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
 }
 
 export default function CountryPanel() {

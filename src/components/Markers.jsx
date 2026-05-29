@@ -37,13 +37,7 @@ function clusterEvents(events, radiusDeg) {
 function getEventColor(event) {
   if (event.type === 'Fire') return '#ef4444'; // Rojo para incendios
   if (event.type === 'Storm') return '#3b82f6'; // Azul para tormentas
-  
-  // Sismos por magnitud
-  const mag = event.data?.mag || 0;
-  if (mag >= 6.0) return '#dc2626'; // Rojo oscuro para críticos
-  if (mag >= 4.5) return '#f97316'; // Naranja para fuertes
-  if (mag >= 2.5) return '#eab308'; // Amarillo para moderados
-  return '#10b981'; // Verde para leves
+  return '#f97316'; // Naranja para todos los sismos
 }
 
 function ClusterMarker({ cluster }) {

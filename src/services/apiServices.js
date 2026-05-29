@@ -22,15 +22,8 @@ export const fetchEonetEvents = async () => {
 
 export const fetchFirmsFires = async () => {
   try {
-    // Nota: FIRMS API requiere una API KEY real. Para que no falle, simularemos o retornaremos vacío
-    // si no hay llave provista, o puedes cambiar '[TU_API_KEY]' por una real.
-    const apiKey = 'DEMO_KEY'; 
-    if (apiKey === 'DEMO_KEY') {
-        console.warn('NASA FIRMS API Key is missing. Using empty data or please provide a valid key.');
-        useStore.getState().setFirmsFires([]);
-        return;
-    }
-    const res = await fetch(`https://firms.modaps.eosdis.nasa.gov/api/area/csv/${apiKey}/VIIRS_SNPP_NRT/world/1`);
+    // Usamos el archivo CSV público global de las últimas 24h (MODIS) que NO requiere API KEY.
+    const res = await fetch('https://firms.modaps.eosdis.nasa.gov/data/active_fire/modis-c6.1/csv/MODIS_C6_1_Global_24h.csv');
     const text = await res.text();
     // Parseo básico de CSV a JSON
     const lines = text.split('\n').filter(line => line.trim() !== '');
@@ -43,7 +36,18 @@ export const fetchFirmsFires = async () => {
           return obj;
         }, {});
       });
-      useStore.getState().setFirmsFires(fires);
+      // Aseguramos que tengan la fecha en un formato común para el timeline (usando acq_date)
+      // MODIS CSV usa acq_date (YYYY-MM-DD) y acq_time (HHMM)
+      const formattedFires = fires.map(f => {
+        // Combinar acq_date y acq_time
+        const timeStr = f.acq_time ? f.acq_time.padStart(4, '0') : '0000';
+        const isoString = `${f.acq_date}T${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}:00Z`;
+        return {
+          ...f,
+          acq_date: isoString
+        };
+      });
+      useStore.getState().setFirmsFires(formattedFires);
     }
   } catch (error) {
     console.error('Error fetching NASA FIRMS:', error);

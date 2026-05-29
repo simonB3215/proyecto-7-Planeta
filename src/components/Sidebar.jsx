@@ -17,12 +17,7 @@ export default function Sidebar() {
   };
 
   const getMagnitudeColor = (mag) => {
-    if (!mag) return "text-gray-300";
-    const num = parseFloat(mag);
-    if (num < 3.0) return "text-gray-400";
-    if (num >= 3.0 && num < 5.0) return "text-yellow-400";
-    if (num >= 5.0 && num < 7.0) return "text-orange-400";
-    return "text-red-500 font-bold";
+    return "text-orange-400 font-bold";
   };
 
   const formatEventType = (type) => {
