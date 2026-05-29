@@ -8,6 +8,9 @@ export const useStore = create((set) => ({
   error: null,
   targetLocation: null,
   selectedEvent: null, // Nuevo estado
+  selectedCountry: null,
+  isRotating: true, // Estado para controlar la rotación de la Tierra
+  lightingMode: 'full', // Estado para controlar la iluminación ('full' o 'realtime')
   
   setEarthquakes: (data) => set({ earthquakes: data }),
   setEonetEvents: (data) => set({ eonetEvents: data }),
@@ -17,5 +20,9 @@ export const useStore = create((set) => ({
   setTargetLocation: (lat, lng) => set({ targetLocation: { lat, lng } }),
   
   setSelectedEvent: (eventData) => set({ selectedEvent: eventData }),
-  clearSelectedEvent: () => set({ selectedEvent: null })
+  clearSelectedEvent: () => set({ selectedEvent: null }),
+  setSelectedCountry: (countryName) => set({ selectedCountry: countryName }),
+  clearSelectedCountry: () => set({ selectedCountry: null }),
+  toggleRotation: () => set((state) => ({ isRotating: !state.isRotating })),
+  toggleLighting: () => set((state) => ({ lightingMode: state.lightingMode === 'full' ? 'realtime' : 'full' }))
 }));

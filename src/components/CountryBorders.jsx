@@ -1,64 +1,99 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { latLngToVector3 } from '../utils/geoToVector3';
 
-export default function CountryBorders() {
+const CountryBorders = React.memo(() => {
   const [geoData, setGeoData] = useState(null);
 
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
-      .then((res) => res.json())
+    fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
+      .then((res) => {
+        if (!res.ok) throw new Error("Fetch failed");
+        return res.json();
+      })
       .then((data) => setGeoData(data))
       .catch((err) => console.error("Error loading country borders:", err));
   }, []);
 
-  const lineGeometry = useMemo(() => {
-    if (!geoData) return null;
+  const positions = useMemo(() => {
+    if (!geoData || !geoData.features || !Array.isArray(geoData.features)) return null;
 
-    const points = [];
-    const radius = 1.001; // Ligeramente por encima de la superficie (1.0) para evitar z-fighting
+    try {
+      const vertices = [];
+      const radius = 1.001; 
 
-    geoData.features.forEach((feature) => {
-      if (!feature.geometry) return;
+      const pushVertex = (lat, lng) => {
+        if (typeof lat !== 'number' || typeof lng !== 'number') return;
+        const phi = (90 - lat) * (Math.PI / 180);
+        const theta = (lng + 180) * (Math.PI / 180);
 
-      const { type, coordinates } = feature.geometry;
+        const x = -(radius * Math.sin(phi) * Math.cos(theta));
+        const z = (radius * Math.sin(phi) * Math.sin(theta));
+        const y = (radius * Math.cos(phi));
 
-      const processPolygon = (polygon) => {
-        // En GeoJSON, el primer anillo es el exterior.
-        const ring = polygon[0];
-        for (let i = 0; i < ring.length - 1; i++) {
-          const [lng1, lat1] = ring[i];
-          const [lng2, lat2] = ring[i + 1];
-
-          // Evitar líneas horizontales largas que cruzan el mapa (artefactos del meridiano 180)
-          if (Math.abs(lng1 - lng2) > 180) continue;
-
-          points.push(latLngToVector3(lat1, lng1, radius));
-          points.push(latLngToVector3(lat2, lng2, radius));
-        }
+        vertices.push(x, y, z);
       };
 
-      if (type === 'Polygon') {
-        processPolygon(coordinates);
-      } else if (type === 'MultiPolygon') {
-        coordinates.forEach(processPolygon);
-      }
-    });
+      geoData.features.forEach((feature) => {
+        if (!feature || !feature.geometry || !Array.isArray(feature.geometry.coordinates)) return;
+        const { type, coordinates } = feature.geometry;
 
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    return geometry;
+        const processPolygon = (polygon) => {
+          if (!Array.isArray(polygon)) return;
+          const ring = polygon[0];
+          if (!Array.isArray(ring)) return;
+          
+          for (let i = 0; i < ring.length - 1; i++) {
+            const point1 = ring[i];
+            const point2 = ring[i + 1];
+            if (!Array.isArray(point1) || !Array.isArray(point2)) continue;
+
+            const [lng1, lat1] = point1;
+            const [lng2, lat2] = point2;
+
+            if (Math.abs(lng1 - lng2) > 180) continue;
+
+            pushVertex(lat1, lng1);
+            pushVertex(lat2, lng2);
+          }
+        };
+
+        if (type === 'Polygon') {
+          processPolygon(coordinates);
+        } else if (type === 'MultiPolygon') {
+          coordinates.forEach(processPolygon);
+        }
+      });
+
+      return new Float32Array(vertices);
+    } catch (e) {
+      console.error("GeoJSON parse error", e);
+      return null;
+    }
   }, [geoData]);
 
-  if (!lineGeometry) return null;
+  if (!positions || positions.length === 0) return null;
 
   return (
-    <lineSegments geometry={lineGeometry} raycast={() => null}>
+    <lineSegments 
+      raycast={() => null}
+      castShadow={false}
+      receiveShadow={false}
+    >
+      <bufferGeometry>
+        <bufferAttribute 
+          attach="attributes-position" 
+          count={positions.length / 3} 
+          array={positions} 
+          itemSize={3} 
+        />
+      </bufferGeometry>
       <lineBasicMaterial 
         color="#ffcc00" 
         transparent={true} 
         opacity={0.3} 
-        linewidth={1} 
       />
     </lineSegments>
   );
-}
+});
+
+export default CountryBorders;

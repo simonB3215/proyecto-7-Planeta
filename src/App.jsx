@@ -5,12 +5,17 @@ import { fetchAllData } from './services/apiServices';
 import { useStore } from './store/useStore';
 import { latLngToVector3 } from './utils/geoToVector3';
 import Sidebar from './components/Sidebar';
+import CountryPanel from './components/CountryPanel';
 
 function App() {
   const isLoading = useStore(state => state.isLoading);
   const earthquakes = useStore(state => state.earthquakes);
   const eonetEvents = useStore(state => state.eonetEvents);
   const setSelectedEvent = useStore(state => state.setSelectedEvent);
+  const isRotating = useStore(state => state.isRotating);
+  const toggleRotation = useStore(state => state.toggleRotation);
+  const lightingMode = useStore(state => state.lightingMode);
+  const toggleLighting = useStore(state => state.toggleLighting);
 
   useEffect(() => {
     fetchAllData();
@@ -39,8 +44,9 @@ function App() {
       {/* UI Layer (Z-10) - pointer-events-none */}
       <div className="absolute inset-0 z-10 pointer-events-none flex flex-col">
         
-        {/* Right Panel Overlay */}
+        {/* Overlays Absolutos */}
         <Sidebar />
+        <CountryPanel />
         
         {/* Header - Interactive */}
         <header className="h-16 border-b border-slate-800 glass-panel m-4 mb-2 flex items-center px-6 justify-between pointer-events-auto shrink-0">
@@ -76,6 +82,15 @@ function App() {
                            const [lng, lat] = eq.geometry.coordinates;
                            const pos = latLngToVector3(parseFloat(lat), parseFloat(lng), 1.01);
                            setSelectedEvent({ id: eq.id, type: 'Earthquake', title: eq.properties.place, date: eq.properties.time, mag: eq.properties.mag, pos });
+                           
+                           // Extraer el país o región del texto (después de la última coma)
+                           const placeParts = eq.properties.place.split(',');
+                           if (placeParts.length > 1) {
+                             const region = placeParts.pop().trim();
+                             useStore.getState().setSelectedCountry(region);
+                           } else {
+                             useStore.getState().setSelectedCountry(eq.properties.place.trim());
+                           }
                          }}
                          className="border-l-2 border-orange-500 pl-2 py-1 bg-slate-900/40 hover:bg-slate-800/60 transition-colors cursor-pointer active:scale-95">
                       <div className="text-orange-400 font-bold">MAG {eq.properties.mag}</div>
@@ -91,6 +106,9 @@ function App() {
                            while(Array.isArray(firstPt[0])) { firstPt = firstPt[0]; }
                            const pos = latLngToVector3(parseFloat(firstPt[1]), parseFloat(firstPt[0]), 1.01);
                            setSelectedEvent({ id: ev.id, type: 'Storm', title: ev.title, date: ev.geometries[0].date, pos });
+                           
+                           // Extraer región para eventos meteorológicos
+                           useStore.getState().setSelectedCountry(ev.title);
                          }}
                          className="border-l-2 border-blue-500 pl-2 py-1 bg-slate-900/40 hover:bg-slate-800/60 transition-colors cursor-pointer active:scale-95">
                       <div className="text-blue-400 font-bold">{ev.categories[0]?.title || 'EVENT'}</div>
@@ -103,6 +121,34 @@ function App() {
           </aside>
 
         </main>
+
+        {/* Global Controls */}
+        <div className="absolute bottom-6 right-6 z-30 pointer-events-auto flex gap-3">
+          <button 
+            onClick={toggleLighting}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-2xl border ${lightingMode === 'full' ? 'bg-yellow-500/80 border-yellow-400 text-white shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-yellow-500 hover:text-white'}`}
+            title={lightingMode === 'full' ? "Luz Tiempo Real" : "Iluminación Total"}
+          >
+            {lightingMode === 'full' ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            )}
+          </button>
+          
+          <button 
+            onClick={toggleRotation}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-2xl border ${isRotating ? 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-orange-500 hover:text-white' : 'bg-orange-500/80 border-orange-400 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)]'}`}
+            title={isRotating ? "Pausar Rotación" : "Reanudar Rotación"}
+          >
+            {isRotating ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            )}
+          </button>
+        </div>
+
       </div>
     </div>
   )

@@ -1,10 +1,11 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Stars, Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import Markers from './Markers';
 import CameraController from './CameraController';
 import CountryBorders from './CountryBorders';
+import { useStore } from '../store/useStore';
 
 export default function Globe() {
   const globeRef = useRef();
@@ -13,14 +14,42 @@ export default function Globe() {
   const pointerDownRef = useRef({ x: 0, y: 0 });
   const [clickedCountry, setClickedCountry] = useState(null);
   
-  // Usaremos texturas públicas de Three.js para la Tierra
-  const [colorMap, bumpMap] = useLoader(THREE.TextureLoader, [
+  const isRotating = useStore(state => state.isRotating);
+  const lightingMode = useStore(state => state.lightingMode);
+
+  // Calcular la posición del sol en tiempo real (basado en UTC)
+  const sunPosition = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    const declination = -23.44 * Math.cos((360 / 365) * (dayOfYear + 10) * (Math.PI / 180));
+    
+    const timeInHours = now.getUTCHours() + now.getUTCMinutes() / 60;
+    const longitude = (12 - timeInHours) * 15;
+    
+    const radius = 20;
+    const phi = (90 - declination) * (Math.PI / 180);
+    const theta = (longitude + 180) * (Math.PI / 180);
+    
+    const x = -(radius * Math.sin(phi) * Math.cos(theta));
+    const z = (radius * Math.sin(phi) * Math.sin(theta));
+    const y = (radius * Math.cos(phi));
+    
+    return [x, y, z];
+  }, [lightingMode]); // Recalcular solo cuando se cambia el modo para actualizar la luz
+  
+  // Usaremos texturas públicas de Three.js para la Tierra y Nubes
+  const [colorMap, bumpMap, cloudMap, nightMap] = useLoader(THREE.TextureLoader, [
     'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
-    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_normal_2048.jpg'
+    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_normal_2048.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_clouds_1024.png',
+    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_lights_2048.png'
   ]);
 
   useFrame(() => {
-    if (globeRef.current) {
+    if (globeRef.current && isRotating) {
       globeRef.current.rotation.y += 0.0005;
     }
   });
@@ -54,16 +83,20 @@ export default function Globe() {
     // Mapeo inverso matemático usando las coordenadas UV
     let lat = (e.uv.y - 0.5) * 180;
     let lng = (e.uv.x - 0.5) * 360;
-    lng = -lng; 
 
     setClickedCountry({ position: hoverPos, name: 'Buscando...' });
 
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`);
       const data = await res.json();
-      const country = data.address?.country || 'Océano';
+      const country = data.address?.country || 'Ocean';
       
       setClickedCountry({ position: hoverPos, name: country });
+      
+      // Enviar el país al panel interactivo 2D si es válido
+      if (country !== 'Ocean') {
+        useStore.getState().setSelectedCountry(country);
+      }
 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
@@ -76,8 +109,12 @@ export default function Globe() {
 
   return (
     <>
-      <ambientLight intensity={3} />
-      <directionalLight position={[10, 10, 10]} intensity={1.5} />
+      <ambientLight intensity={lightingMode === 'full' ? 3 : 0.03} />
+      
+      {/* Luz global cuando está en Full (no rota con la Tierra) */}
+      {lightingMode === 'full' && (
+        <directionalLight position={[10, 10, 10]} intensity={1.5} />
+      )}
       
       <CameraController controlsRef={controlsRef} globeRef={globeRef} />
       
@@ -100,8 +137,31 @@ export default function Globe() {
           <meshStandardMaterial 
             map={colorMap}
             normalMap={bumpMap}
+            emissiveMap={nightMap}
+            emissive="#ffeba6"
+            emissiveIntensity={lightingMode === 'realtime' ? 2 : 0}
             metalness={0.1}
             roughness={0.7}
+          />
+        </mesh>
+
+        {/* Luz direccional anclada a la rotación geográfica del globo (Tiempo Real) */}
+        {lightingMode === 'realtime' && (
+          <directionalLight 
+            position={sunPosition} 
+            intensity={4} 
+          />
+        )}
+
+        {/* Capa de Nubes (Estética) */}
+        <mesh raycast={() => null}>
+          <sphereGeometry args={[1.006, 64, 64]} />
+          <meshPhongMaterial 
+            map={cloudMap}
+            transparent={true}
+            opacity={0.4}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
           />
         </mesh>
 
@@ -113,14 +173,16 @@ export default function Globe() {
           <Billboard position={clickedCountry.position}>
             <Text 
               raycast={() => null}
-              fontSize={0.08} 
-              color="white" 
+              fontSize={0.035} 
+              letterSpacing={0.15}
+              color="#ffffff" 
               anchorX="center" 
               anchorY="middle"
-              outlineWidth={0.015}
-              outlineColor="black"
+              outlineWidth={0.006}
+              outlineColor="#000000"
+              fillOpacity={0.9}
             >
-              {clickedCountry.name}
+              {clickedCountry.name.toUpperCase()}
             </Text>
           </Billboard>
         )}
