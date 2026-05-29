@@ -6,7 +6,6 @@ import { useStore } from './store/useStore';
 import { latLngToVector3 } from './utils/geoToVector3';
 import Sidebar from './components/Sidebar';
 import CountryPanel from './components/CountryPanel';
-import Timeline from './components/Timeline';
 
 function getEventStyles(mag) {
   if (mag >= 6.0) return { border: 'border-red-600', text: 'text-red-500', bg: 'bg-red-950/20 hover:bg-red-900/40' };
@@ -58,7 +57,6 @@ function App() {
         {/* Overlays Absolutos */}
         <Sidebar />
         <CountryPanel />
-        <Timeline />
         
         {/* Header - Interactive */}
         <header className="h-16 border-b border-slate-800 glass-panel m-4 mb-2 flex items-center px-6 justify-between pointer-events-auto shrink-0">

@@ -2,6 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
 
+function getEventStyles(mag) {
+  if (mag >= 6.0) return { border: 'border-red-600', text: 'text-red-500', bg: 'bg-red-950/20 hover:bg-red-900/40' };
+  if (mag >= 4.5) return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
+  if (mag >= 2.5) return { border: 'border-yellow-500', text: 'text-yellow-400', bg: 'bg-yellow-950/20 hover:bg-yellow-900/30' };
+  return { border: 'border-emerald-500', text: 'text-emerald-400', bg: 'bg-emerald-950/20 hover:bg-emerald-900/30' };
+}
+
 export default function CountryPanel() {
   const selectedCountry = useStore(state => state.selectedCountry);
   const clearSelectedCountry = useStore(state => state.clearSelectedCountry);
@@ -11,8 +18,8 @@ export default function CountryPanel() {
 
   // Estados para el arrastre (Drag & Drop)
   const [position, setPosition] = useState({ 
-    x: window.innerWidth / 2 - 192, 
-    y: window.innerHeight - 400 
+    x: window.innerWidth - 340, 
+    y: 80 
   });
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef({ startX: 0, startY: 0, initialPosX: 0, initialPosY: 0 });
@@ -81,7 +88,7 @@ export default function CountryPanel() {
 
   return (
     <div 
-      className="absolute z-20 w-96 bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col max-h-[60vh]"
+      className="absolute z-20 w-80 bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col max-h-[50vh]"
       style={{ left: position.x, top: position.y }}
     >
       <div 
@@ -108,34 +115,37 @@ export default function CountryPanel() {
             No se detectó actividad sísmica reciente en esta región.
           </div>
         ) : (
-          countryEvents.map(eq => (
-            <div 
-              key={eq.id}
-              onClick={() => {
-                const [lng, lat] = eq.geometry.coordinates;
-                const pos = latLngToVector3(parseFloat(lat), parseFloat(lng), 1.01);
-                setSelectedEvent({ 
-                  id: eq.id, 
-                  type: 'Earthquake', 
-                  title: eq.properties.place, 
-                  date: eq.properties.time, 
-                  mag: eq.properties.mag, 
-                  pos 
-                });
-              }}
-              className="group border border-slate-800 rounded-lg p-3 cursor-pointer hover:border-orange-500 hover:bg-slate-800/80 transition-all"
-            >
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-orange-400 font-bold text-xs tech-text bg-orange-950/50 px-2 py-0.5 rounded">MAG {eq.properties.mag}</span>
-                <span className="text-slate-500 text-[10px]">
-                  {new Date(eq.properties.time).toLocaleDateString()} {new Date(eq.properties.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                </span>
+          countryEvents.map(eq => {
+            const styles = getEventStyles(eq.properties.mag || 0);
+            return (
+              <div 
+                key={eq.id}
+                onClick={() => {
+                  const [lng, lat] = eq.geometry.coordinates;
+                  const pos = latLngToVector3(parseFloat(lat), parseFloat(lng), 1.01);
+                  setSelectedEvent({ 
+                    id: eq.id, 
+                    type: 'Earthquake', 
+                    title: eq.properties.place, 
+                    date: eq.properties.time, 
+                    mag: eq.properties.mag, 
+                    pos 
+                  });
+                }}
+                className={`group border-l-4 ${styles.border} ${styles.bg} rounded-r-lg p-3 cursor-pointer transition-all mb-2`}
+              >
+                <div className="flex justify-between items-center mb-1">
+                  <span className={`${styles.text} font-bold text-xs tech-text`}>MAG {eq.properties.mag}</span>
+                  <span className="text-slate-500 text-[10px]">
+                    {new Date(eq.properties.time).toLocaleDateString()} {new Date(eq.properties.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-300 truncate mt-2" title={eq.properties.place}>
+                  {eq.properties.place}
+                </p>
               </div>
-              <p className="text-sm text-slate-300 truncate mt-2" title={eq.properties.place}>
-                {eq.properties.place}
-              </p>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
