@@ -49,6 +49,7 @@ function getEventColor(event) {
 function ClusterMarker({ cluster }) {
   const pos = latLngToVector3(cluster.center.lat, cluster.center.lng, GLOBE_RADIUS);
   const count = cluster.events.length;
+  const setSelectedEvent = useStore(state => state.setSelectedEvent);
   
   // Si es un solo evento, usamos su color específico
   if (count === 1) {
@@ -59,6 +60,8 @@ function ClusterMarker({ cluster }) {
   
   // Si es un clúster, calculamos el color basado en el evento más peligroso del clúster
   let maxMag = 0;
+  let recentDate = cluster.events[0]?.data?.date || new Date().toISOString();
+  
   cluster.events.forEach(ev => {
     if (ev.type === 'Earthquake' && ev.data?.mag > maxMag) {
       maxMag = ev.data.mag;
@@ -72,11 +75,35 @@ function ClusterMarker({ cluster }) {
     clusterColor = getEventColor({ type: 'Earthquake', data: { mag: maxMag } });
   }
 
+  const handleClick = (e) => {
+    e.stopPropagation();
+    setSelectedEvent({
+      id: cluster.id,
+      type: cluster.type,
+      title: `${count} Eventos Agrupados en esta región`,
+      date: recentDate,
+      mag: cluster.type === 'Earthquake' ? maxMag : undefined,
+      pos: pos,
+      rawLat: cluster.center.lat,
+      rawLng: cluster.center.lng
+    });
+  };
+
+  const handlePointerOver = (e) => {
+    e.stopPropagation();
+    document.body.style.cursor = 'pointer';
+  };
+
+  const handlePointerOut = (e) => {
+    e.stopPropagation();
+    document.body.style.cursor = 'default';
+  };
+
   return (
     <group position={pos}>
-      <mesh>
+      <mesh onClick={handleClick} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
         <sphereGeometry args={[0.02 + (count * 0.001), 16, 16]} />
-        <meshBasicMaterial color={clusterColor} transparent={true} opacity={0.6} />
+        <meshBasicMaterial color={clusterColor} transparent={true} opacity={0.8} />
       </mesh>
       <Billboard position={[0, 0, 0.03]} raycast={() => null}>
         <Text fontSize={0.03} color="white" outlineWidth={0.005} outlineColor="black" raycast={() => null}>
@@ -141,7 +168,7 @@ export default function Markers() {
         if (eventTime > timelineDate) return null;
 
         const pos = latLngToVector3(coords[1], coords[0], GLOBE_RADIUS);
-        return <EventMarker key={ev.id} position={pos} color="#f97316" size={0.015} eventData={{ id: ev.id, type: 'Storm', title: ev.title, date: ev.geometries[0].date, pos: pos, rawLat: coords[1], rawLng: coords[0] }} />;
+        return <EventMarker key={ev.id} position={pos} color="#3b82f6" size={0.015} eventData={{ id: ev.id, type: 'Storm', title: ev.title, date: ev.geometries[0].date, pos: pos, rawLat: coords[1], rawLng: coords[0] }} />;
       });
   }, [eonetEvents, timelineDate]);
 
