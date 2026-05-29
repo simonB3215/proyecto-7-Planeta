@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-200 font-mono overflow-hidden;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-xl;
+  }
+  
+  .tech-text {
+    @apply font-mono text-sm tracking-wider uppercase;
+  }
+}

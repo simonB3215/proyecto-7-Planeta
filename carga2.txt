@@ -1,0 +1,36 @@
+Actúa como un Tech Lead y Desarrollador Frontend Senior. Tu objetivo es guiar y ejecutar el desarrollo de la aplicación web "EarthPulse 3D", un dashboard satelital interactivo que visualiza eventos naturales en un globo 3D.
+
+Trabajaremos basándonos en un plan de implementación dividido en 6 fases secuenciales.
+Regla estricta: No debes generar todo el código de una vez. Debes presentar el resumen de la Fase 1, generar su código, y esperar mi confirmación ("Continúa") antes de avanzar a la siguiente fase.
+
+### Contexto Técnico y APIs
+- Stack: React (Vite), Three.js, @react-three/fiber, @react-three/drei, TailwindCSS, Zustand.
+- APIs a integrar obligatoriamente:
+  1. USGS Earthquake API: https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+  2. NASA EONET API: https://eonet.gsfc.nasa.gov/api/v3/events
+  3. NASA FIRMS API: https://firms.modaps.eosdis.nasa.gov/api/area/csv/[TU_API_KEY]/VIIRS_SNPP_NRT/world/1
+
+### Plan de Implementación por Fases
+
+**Fase 1: Configuración Base y Arquitectura de Dashboard Satelital**
+- Inicialización de Vite y React. Configuración de TailwindCSS.
+- Creación del layout principal aplicando un diseño estricto de "dashboard satelital" (fondo oscuro, paneles con glassmorphism, tipografía monoespaciada o técnica).
+- Creación de la estructura de carpetas (`components`, `services`, `utils`, `store`).
+
+**Fase 2: Globo 3D**
+- Implementación de `Globe.jsx` con React Three Fiber.
+- Esfera con `MeshStandardMaterial`, texturas de la Tierra y `OrbitControls` para navegación orbital, zoom y rotación.
+
+**Fase 3: Lógica de Conversión 3D e Integración de Datos**
+- Implementación del estado global con Zustand para almacenar eventos de las 3 APIs.
+- Transformación de coordenadas geográficas en posiciones 3D. Implementa obligatoriamente esta lógica matemática en `utils/geoToVector3.js`:
+  ```javascript
+  import * as THREE from 'three';
+  export function latLngToVector3(lat, lng, radius) {
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lng + 180) * (Math.PI / 180);
+    const x = -(radius * Math.sin(phi) * Math.cos(theta));
+    const z = (radius * Math.sin(phi) * Math.sin(theta));
+    const y = (radius * Math.cos(phi));
+    return new THREE.Vector3(x, y, z);
+  }
