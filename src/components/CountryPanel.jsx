@@ -99,9 +99,10 @@ export default function CountryPanel() {
         className="bg-slate-900/90 p-4 border-b border-slate-700 flex justify-between items-center shrink-0 select-none h-[85px]"
       >
         <div className="pointer-events-none">
-          <h2 className="text-xl font-bold text-white tracking-wide">{selectedCountry}</h2>
-          <p className="text-xs text-slate-400 tech-text mt-1">
-            REGISTROS RECIENTES: <span className={countryEvents.length > 0 ? "text-red-400 font-bold" : "text-emerald-400 font-bold"}>{countryEvents.length}</span>
+          <h2 className="text-xl font-bold text-slate-100 tracking-wide">{selectedCountry}</h2>
+          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Registros recientes: <span className={countryEvents.length > 0 ? "text-red-400 font-bold" : "text-emerald-400 font-bold"}>{countryEvents.length}</span>
           </p>
         </div>
         <div className="flex gap-1 z-10">
@@ -147,7 +148,7 @@ export default function CountryPanel() {
                   className={`group border-l-4 ${styles.border} ${styles.bg} rounded-r-lg p-3 cursor-pointer transition-all mb-2`}
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className={`${styles.text} font-bold text-xs tech-text`}>MAG {event.properties.mag}</span>
+                    <span className={`${styles.text} font-bold text-xs`}>Mag. {event.properties.mag}</span>
                     <span className="text-slate-500 text-[10px]">
                       {new Date(event.properties.time).toLocaleDateString()} {new Date(event.properties.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </span>
@@ -175,7 +176,7 @@ export default function CountryPanel() {
                   className="group border-l-4 border-blue-500 bg-blue-950/20 hover:bg-blue-900/30 rounded-r-lg p-3 cursor-pointer transition-all mb-2"
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-blue-400 font-bold text-xs tech-text uppercase">{event.categories[0]?.title || 'STORM'}</span>
+                    <span className="text-blue-400 font-bold text-xs">{event.categories[0]?.title || 'Tormenta'}</span>
                     <span className="text-slate-500 text-[10px]">
                       {new Date(event.geometries[0].date).toLocaleDateString()}
                     </span>
@@ -201,7 +202,7 @@ export default function CountryPanel() {
                   className="group border-l-4 border-red-500 bg-red-950/20 hover:bg-red-900/30 rounded-r-lg p-3 cursor-pointer transition-all mb-2"
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-red-500 font-bold text-xs tech-text uppercase">THERMAL ANOMALY</span>
+                    <span className="text-red-500 font-bold text-xs">Anomalía Térmica</span>
                     <span className="text-slate-500 text-[10px]">
                       {new Date(event.acq_date).toLocaleDateString()}
                     </span>

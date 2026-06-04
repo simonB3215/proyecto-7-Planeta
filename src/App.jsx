@@ -63,12 +63,15 @@ function App() {
             <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.7)]"></div>
             <h1 className="text-xl font-bold tracking-widest text-slate-100">EARTHPULSE <span className="text-red-500">3D</span></h1>
           </div>
-          <div className="flex gap-6 tech-text text-slate-400">
+          <div className="flex gap-6 text-sm text-slate-400 font-medium">
             <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-emerald-500'}`}></span>
-              <span>{isLoading ? 'SYSTEM_SYNCING' : 'SYSTEM_ONLINE'}</span>
+              <span className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}></span>
+              <span>{isLoading ? 'Sincronizando...' : 'Sistema en línea'}</span>
             </div>
-            <div>DATA_SYNC: <span className="text-slate-200">ACTIVE</span></div>
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
+              <span>Actualización automática</span>
+            </div>
           </div>
         </header>
 
@@ -78,7 +81,10 @@ function App() {
           {/* Left Panel: Active Events - Interactive */}
           <aside className="w-80 h-full glass-panel flex flex-col overflow-hidden pointer-events-auto shrink-0">
             <div className="p-4 border-b border-slate-800 shrink-0 flex flex-col gap-3">
-              <h2 className="tech-text text-slate-300">ACTIVE_EVENTS_FEED</h2>
+              <h2 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Eventos Activos
+              </h2>
               <input 
                 type="text" 
                 placeholder="Buscar país o región..." 
@@ -89,31 +95,34 @@ function App() {
               
               {/* Global Stats */}
               {!isLoading && (
-                <div className="grid grid-cols-2 gap-2 text-xs mt-1">
-                  <div className="bg-slate-900/40 p-2 rounded border border-slate-800">
-                    <div className="text-slate-500 mb-1">TOTAL SISMOS</div>
-                    <div className="text-orange-400 font-bold text-lg">{earthquakes.length}</div>
+                <div className="grid grid-cols-2 gap-2 text-xs mt-1 mb-3">
+                  <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
+                    <div className="text-slate-400 mb-1 font-medium">Sismos Activos</div>
+                    <div className="text-orange-400 font-bold text-xl">{earthquakes.length}</div>
                   </div>
-                  <div className="bg-slate-900/40 p-2 rounded border border-slate-800">
-                    <div className="text-slate-500 mb-1">MAX MAGNITUD</div>
-                    <div className="text-red-400 font-bold text-lg">
+                  <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
+                    <div className="text-slate-400 mb-1 font-medium">Magnitud Máx.</div>
+                    <div className="text-red-400 font-bold text-xl">
                       {earthquakes.length > 0 ? Math.max(...earthquakes.map(eq => eq.properties.mag || 0)).toFixed(1) : 0}
                     </div>
                   </div>
-                  <div className="bg-slate-900/40 p-2 rounded border border-slate-800">
-                    <div className="text-slate-500 mb-1">ANOMALÍAS TÉRMICAS</div>
-                    <div className="text-rose-500 font-bold text-lg">{useStore.getState().firmsFires.length}</div>
+                  <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
+                    <div className="text-slate-400 mb-1 font-medium">Anomalías Térmicas</div>
+                    <div className="text-rose-500 font-bold text-xl">{useStore.getState().firmsFires.length}</div>
                   </div>
-                  <div className="bg-slate-900/40 p-2 rounded border border-slate-800">
-                    <div className="text-slate-500 mb-1">TORMENTAS ACTIVAS</div>
-                    <div className="text-blue-400 font-bold text-lg">{eonetEvents.length}</div>
+                  <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
+                    <div className="text-slate-400 mb-1 font-medium">Tormentas</div>
+                    <div className="text-blue-400 font-bold text-xl">{eonetEvents.length}</div>
                   </div>
                 </div>
               )}
             </div>
-            <div className="flex-1 p-4 overflow-y-auto tech-text text-xs space-y-3">
+            <div className="flex-1 p-4 overflow-y-auto text-sm space-y-3">
               {isLoading && earthquakes.length === 0 ? (
-                <div className="text-slate-500 animate-pulse">[WAITING_FOR_DATA_STREAM...]</div>
+                <div className="text-slate-500 animate-pulse flex items-center justify-center h-20 gap-2">
+                  <div className="w-4 h-4 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></div>
+                  Cargando datos satelitales...
+                </div>
               ) : (
                 <>
                   {earthquakes
@@ -137,7 +146,7 @@ function App() {
                                }
                              }}
                              className={`border-l-4 ${styles.border} pl-3 py-2 ${styles.bg} rounded-r-md transition-colors cursor-pointer active:scale-95 mb-2`}>
-                          <div className={`${styles.text} font-bold text-[11px]`}>MAG {eq.properties.mag}</div>
+                          <div className={`${styles.text} font-bold text-xs`}>Mag. {eq.properties.mag}</div>
                           <div className="text-slate-300 truncate" title={eq.properties.place}>{eq.properties.place}</div>
                         </div>
                       );
@@ -158,7 +167,7 @@ function App() {
                            useStore.getState().setSelectedCountry(ev.title);
                          }}
                          className="border-l-4 border-blue-500 pl-3 py-2 bg-blue-950/20 hover:bg-blue-900/30 rounded-r-md transition-colors cursor-pointer active:scale-95 mb-2">
-                      <div className="text-blue-400 font-bold text-[11px] uppercase">{ev.categories[0]?.title || 'EVENT'}</div>
+                      <div className="text-blue-400 font-bold text-xs">{ev.categories[0]?.title || 'Evento Meteorológico'}</div>
                       <div className="text-slate-300 truncate" title={ev.title}>{ev.title}</div>
                     </div>
                   ))}

@@ -102,25 +102,20 @@ function ClusterMarker({ cluster }) {
         <sphereGeometry args={[0.02 + (count * 0.001), 16, 16]} />
         <meshBasicMaterial color={clusterColor} transparent={true} opacity={0.8} />
       </mesh>
-      <Billboard position={[0, 0, 0.03]} raycast={() => null}>
-        <Text fontSize={0.03} color="white" outlineWidth={0.005} outlineColor="black" raycast={() => null}>
-          {count.toString()}
-        </Text>
-      </Billboard>
 
       {isHovered && (
-        <Html distanceFactor={2} zIndexRange={[100, 0]}>
-          <div className="bg-slate-900/90 backdrop-blur-md text-white px-3 py-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-slate-700 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
-            <div className="text-[12px] font-bold text-slate-200 mb-1 flex items-center gap-1">
-              <span className="text-[14px]">📍</span>
+        <Html zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
+          <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-slate-700 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
+            <div className="font-bold text-slate-200 mb-2 flex items-center gap-2 text-sm">
+              <span className="text-base">📍</span>
               <span>{count} Eventos Agrupados</span>
             </div>
             {cluster.type === 'Earthquake' && (
-              <div className="text-[10px] text-orange-400 font-bold mb-1">
+              <div className="text-xs text-orange-400 font-bold mb-1">
                 Magnitud Máxima: {maxMag}
               </div>
             )}
-            <div className="text-[9px] text-slate-400 mt-1">
+            <div className="text-[11px] text-slate-400 mt-2">
               {new Date(recentDate).toLocaleString()}
             </div>
           </div>
