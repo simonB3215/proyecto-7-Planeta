@@ -30,6 +30,7 @@ export default function Sidebar() {
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Fecha Desconocida';
     return date.toLocaleDateString('es-ES', { 
       month: 'long', 
       day: 'numeric', 
