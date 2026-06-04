@@ -7,6 +7,15 @@ function getEventStyles(mag) {
   return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
 }
 
+// Helpers para geolocalización de EE.UU.
+const isUS = (countryQuery) => countryQuery === "united states" || countryQuery === "usa";
+const checkUSBounds = (lng, lat) => {
+  const inContiguousUS = lat >= 24 && lat <= 50 && lng >= -125 && lng <= -65;
+  const inAlaska = lat >= 51 && lat <= 72 && lng >= -180 && lng <= -130;
+  const inHawaii = lat >= 18 && lat <= 23 && lng >= -161 && lng <= -154;
+  return inContiguousUS || inAlaska || inHawaii;
+};
+
 export default function CountryPanel() {
   const selectedCountry = useStore(state => state.selectedCountry);
   const clearSelectedCountry = useStore(state => state.clearSelectedCountry);
@@ -18,17 +27,6 @@ export default function CountryPanel() {
   const geoJsonData = useStore(state => state.geoJsonData);
 
   const [isExpanded, setIsExpanded] = useState(true);
-
-  if (!selectedCountry) return null;
-
-  // Helpers para geolocalización de EE.UU.
-  const isUS = (countryQuery) => countryQuery === "united states" || countryQuery === "usa";
-  const checkUSBounds = (lng, lat) => {
-    const inContiguousUS = lat >= 24 && lat <= 50 && lng >= -125 && lng <= -65;
-    const inAlaska = lat >= 51 && lat <= 72 && lng >= -180 && lng <= -130;
-    const inHawaii = lat >= 18 && lat <= 23 && lng >= -161 && lng <= -154;
-    return inContiguousUS || inAlaska || inHawaii;
-  };
 
   const countryEvents = useMemo(() => {
     if (!selectedCountry) return [];
@@ -90,6 +88,8 @@ export default function CountryPanel() {
     // Combinar y ordenar por fecha (más reciente primero)
     return [...countryEarthquakes, ...countryStorms, ...countryFires].sort((a, b) => b.sortDate - a.sortDate);
   }, [selectedCountry, earthquakes, eonetEvents, firmsFires, timelineDate, geoJsonData]);
+
+  if (!selectedCountry) return null;
 
   return (
     <div 
