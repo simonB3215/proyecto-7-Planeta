@@ -54,27 +54,9 @@ function ClusterMarker({ cluster }) {
   useFrame((state) => {
     const radarMode = useStore.getState().radarMode;
     if (radarMode) {
-      const t = state.clock.elapsedTime * 1.0;
-      let sweepAngle = (Math.PI * 2) - (t % (Math.PI * 2));
-      if (sweepAngle < 0) sweepAngle += Math.PI * 2;
-      
-      let angle = Math.atan2(pos.x, pos.z);
-      if (angle < 0) angle += Math.PI * 2;
-      
-      let diff = sweepAngle - angle;
-      if (diff < 0) diff += Math.PI * 2;
-      
-      let radarIntensity = 0;
-      const trailLength = Math.PI * 1.5;
-      const leadingEdge = 0.5;
-      
-      if (diff <= trailLength) {
-        radarIntensity = 1.0 - (diff / trailLength);
-        radarIntensity = Math.pow(radarIntensity, 1.2);
-      } else if (diff >= (Math.PI * 2) - leadingEdge) {
-        radarIntensity = (diff - ((Math.PI * 2) - leadingEdge)) / leadingEdge;
-        radarIntensity = Math.pow(radarIntensity, 2);
-      }
+      const pulse = Math.sin(state.clock.elapsedTime * 2.0) * 0.5 + 0.5;
+      const pulseIntensity = Math.pow(pulse, 1.5);
+      const radarIntensity = 0.2 + (pulseIntensity * 0.8);
       
       if (coreMaterialRef.current) {
         coreMaterialRef.current.opacity = 0.8 * radarIntensity;

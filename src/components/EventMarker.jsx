@@ -23,29 +23,10 @@ export default function EventMarker({ position, color, size, eventData }) {
     let radarIntensity = 1;
     
     if (radarMode) {
-      const t = state.clock.elapsedTime * 1.0; // Velocidad de rotación mucho más majestuosa
-      let sweepAngle = (Math.PI * 2) - (t % (Math.PI * 2));
-      if (sweepAngle < 0) sweepAngle += Math.PI * 2;
-      
-      let angle = Math.atan2(position.x, position.z);
-      if (angle < 0) angle += Math.PI * 2;
-      
-      let diff = sweepAngle - angle;
-      if (diff < 0) diff += Math.PI * 2;
-      
-      // FADE IN Y FADE OUT (Cero saltos bruscos)
-      const trailLength = Math.PI * 1.5; // La estela dura 3/4 del planeta
-      const leadingEdge = 0.5; // Se enciende suavemente ANTES de que el radar lo golpee
-      
-      if (diff <= trailLength) {
-        radarIntensity = 1.0 - (diff / trailLength);
-        radarIntensity = Math.pow(radarIntensity, 1.2); // Decaimiento muy orgánico
-      } else if (diff >= (Math.PI * 2) - leadingEdge) {
-        radarIntensity = (diff - ((Math.PI * 2) - leadingEdge)) / leadingEdge;
-        radarIntensity = Math.pow(radarIntensity, 2); // Curva suave para entrar
-      } else {
-        radarIntensity = 0;
-      }
+      // Pulso global sincronizado (todas las luces a la vez)
+      const pulse = Math.sin(state.clock.elapsedTime * 2.0) * 0.5 + 0.5;
+      const pulseIntensity = Math.pow(pulse, 1.5); // Curva suave
+      radarIntensity = 0.2 + (pulseIntensity * 0.8); // Nunca desaparece por completo (mínimo 20%)
       
       if (coreMaterialRef.current) {
         coreMaterialRef.current.transparent = true;
