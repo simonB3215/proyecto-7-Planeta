@@ -15,6 +15,7 @@ function App() {
   const isLoading = useStore(state => state.isLoading);
   const earthquakes = useStore(state => state.earthquakes);
   const eonetEvents = useStore(state => state.eonetEvents);
+  const selectedEvent = useStore(state => state.selectedEvent);
   const setSelectedEvent = useStore(state => state.setSelectedEvent);
   const isRotating = useStore(state => state.isRotating);
   const toggleRotation = useStore(state => state.toggleRotation);
@@ -129,6 +130,18 @@ function App() {
                     .filter(eq => eq.properties.place.toLowerCase().includes(searchQuery.toLowerCase()) && new Date(eq.properties.time).getTime() <= timelineDate)
                     .slice(0, 50).map((eq) => {
                       const styles = getEventStyles(eq.properties.mag || 0);
+                      
+                      let mainText = eq.properties.place || 'Ubicación desconocida';
+                      let regionText = '';
+                      if (mainText.includes(',')) {
+                        const parts = mainText.split(',');
+                        regionText = parts.pop().trim();
+                        mainText = parts.join(',').trim() + ',';
+                      }
+                      
+                      let isSelected = selectedEvent?.id === eq.id;
+                      let activeClasses = isSelected ? 'bg-slate-800 border-l-[6px] shadow-[inset_0_0_15px_rgba(249,115,22,0.2)]' : styles.bg;
+
                       return (
                         <div key={eq.id} 
                              onClick={() => {
@@ -137,25 +150,34 @@ function App() {
                                setSelectedEvent({ id: eq.id, type: 'Earthquake', title: eq.properties.place, date: eq.properties.time, mag: eq.properties.mag, pos, rawLat: parseFloat(lat), rawLng: parseFloat(lng) });
                                
                                // Extraer el país o región del texto (después de la última coma)
-                               const placeParts = eq.properties.place.split(',');
-                               if (placeParts.length > 1) {
-                                 const region = placeParts.pop().trim();
-                                 useStore.getState().setSelectedCountry(region);
+                               if (regionText) {
+                                 useStore.getState().setSelectedCountry(regionText);
                                } else {
                                  useStore.getState().setSelectedCountry(eq.properties.place.trim());
                                }
                              }}
-                             className={`border-l-4 ${styles.border} pl-3 py-2 ${styles.bg} rounded-r-md transition-colors cursor-pointer active:scale-95 mb-2`}>
+                             className={`border-l-4 ${styles.border} pl-3 py-2 ${activeClasses} rounded-r-md transition-all cursor-pointer active:scale-95 mb-2`}>
                           <div className={`${styles.text} font-bold text-xs`}>Mag. {eq.properties.mag}</div>
-                          <div className="text-slate-300 truncate" title={eq.properties.place}>{eq.properties.place}</div>
+                          <div className="text-slate-400 text-xs mt-1 truncate" title={eq.properties.place}>
+                            {mainText}
+                            {regionText && (
+                              <span className="ml-1.5 px-1.5 py-0.5 bg-slate-800 border border-slate-700 text-slate-200 rounded text-[10px] font-bold tracking-wider">
+                                {regionText}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       );
                   })}
                   {eonetEvents
                     .filter(ev => ev.title.toLowerCase().includes(searchQuery.toLowerCase()) && ev.geometries?.[0] && new Date(ev.geometries[0].date).getTime() <= timelineDate)
-                    .slice(0, 20).map((ev) => (
-                    <div key={ev.id} 
-                         onClick={() => {
+                    .slice(0, 20).map((ev) => {
+                      let isSelected = selectedEvent?.id === ev.id;
+                      let activeClasses = isSelected ? 'bg-slate-800 border-l-[6px] shadow-[inset_0_0_15px_rgba(59,130,246,0.2)]' : 'bg-blue-950/20 hover:bg-blue-900/30';
+
+                      return (
+                        <div key={ev.id} 
+                             onClick={() => {
                            const coords = ev.geometries?.[0]?.coordinates;
                            if (!coords) return;
                            let firstPt = coords;
@@ -166,7 +188,7 @@ function App() {
                            // Extraer región para eventos meteorológicos
                            useStore.getState().setSelectedCountry(ev.title);
                          }}
-                         className="border-l-4 border-blue-500 pl-3 py-2 bg-blue-950/20 hover:bg-blue-900/30 rounded-r-md transition-colors cursor-pointer active:scale-95 mb-2">
+                         className={`border-l-4 border-blue-500 pl-3 py-2 ${activeClasses} rounded-r-md transition-all cursor-pointer active:scale-95 mb-2`}>
                       <div className="text-blue-400 font-bold text-xs">{ev.categories[0]?.title || 'Evento Meteorológico'}</div>
                       <div className="text-slate-300 truncate" title={ev.title}>{ev.title}</div>
                     </div>

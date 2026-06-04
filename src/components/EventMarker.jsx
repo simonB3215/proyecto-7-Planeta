@@ -97,7 +97,7 @@ export default function EventMarker({ position, color, size, eventData }) {
         </mesh>
       )}
 
-      {isHovered && (
+      {(isHovered || isSelected) && (
         <Html zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
           <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-slate-700 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
             <div className="font-bold text-slate-200 mb-2 flex flex-col gap-1">

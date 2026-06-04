@@ -43,8 +43,11 @@ function getEventColor(event) {
 function ClusterMarker({ cluster }) {
   const pos = latLngToVector3(cluster.center.lat, cluster.center.lng, GLOBE_RADIUS);
   const count = cluster.events.length;
+  const selectedEvent = useStore(state => state.selectedEvent);
   const setSelectedEvent = useStore(state => state.setSelectedEvent);
   const [isHovered, setIsHovered] = useState(false);
+  
+  const isSelected = selectedEvent && cluster.events.some(ev => ev.id === selectedEvent.id);
   
   // Si es un solo evento, usamos su color específico
   if (count === 1) {
@@ -103,7 +106,7 @@ function ClusterMarker({ cluster }) {
         <meshBasicMaterial color={clusterColor} transparent={true} opacity={0.8} />
       </mesh>
 
-      {isHovered && (
+      {(isHovered || isSelected) && (
         <Html zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
           <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-slate-700 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
             <div className="font-bold text-slate-200 mb-2 flex items-center gap-2 text-sm">

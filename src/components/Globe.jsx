@@ -209,17 +209,7 @@ export default function Globe() {
           </>
         )}
 
-        {/* Capa de Nubes (Estética) */}
-        <mesh raycast={() => null}>
-          <sphereGeometry args={[1.006, 64, 64]} />
-          <meshPhongMaterial 
-            map={cloudMap}
-            transparent={true}
-            opacity={0.4}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>
+        {/* Capa de Nubes eliminada por motivos de rendimiento */}
 
         {/* Fronteras del mundo (Mesh de Líneas) */}
         <CountryBorders />
