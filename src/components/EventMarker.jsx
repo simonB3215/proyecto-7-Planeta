@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import { useStore } from '../store/useStore';
 import * as THREE from 'three';
 
@@ -9,6 +10,7 @@ export default function EventMarker({ position, color, size, eventData }) {
   const clearSelectedEvent = useStore(state => state.clearSelectedEvent);
   
   const waveRef = useRef();
+  const [isHovered, setIsHovered] = useState(false);
   
   const isEarthquake = eventData.type === 'Earthquake';
   const isFire = eventData.type === 'Fire';
@@ -42,11 +44,13 @@ export default function EventMarker({ position, color, size, eventData }) {
   const handlePointerOver = (e) => {
     e.stopPropagation();
     document.body.style.cursor = 'pointer';
+    setIsHovered(true);
   };
 
   const handlePointerOut = (e) => {
     e.stopPropagation();
     document.body.style.cursor = 'default';
+    setIsHovered(false);
   };
 
   const handleClick = (e) => {
@@ -91,6 +95,29 @@ export default function EventMarker({ position, color, size, eventData }) {
             />
           )}
         </mesh>
+      )}
+
+      {isHovered && (
+        <Html distanceFactor={2} zIndexRange={[100, 0]}>
+          <div className="bg-slate-900/90 backdrop-blur-md text-white px-3 py-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-slate-700 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
+            <div className="text-[11px] font-bold text-slate-200 mb-1 flex items-center gap-1">
+              {isFire && <span className="text-red-500 text-[14px]">🔥</span>}
+              {isEarthquake && <span className="text-orange-500 text-[14px]">⚡</span>}
+              {eventData.type === 'Storm' && <span className="text-blue-500 text-[14px]">🌪️</span>}
+              <span className="truncate max-w-[200px] block">{eventData.title}</span>
+            </div>
+            
+            {isEarthquake && (
+              <div className="text-[10px] text-orange-400 font-bold mb-1">
+                Magnitud: {eventData.mag}
+              </div>
+            )}
+            
+            <div className="text-[9px] text-slate-400">
+              {new Date(eventData.date).toLocaleString()}
+            </div>
+          </div>
+        </Html>
       )}
     </group>
   );

@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
 import EventMarker from './EventMarker';
-import { Billboard, Text } from '@react-three/drei';
+import { Billboard, Text, Html } from '@react-three/drei';
 
 const GLOBE_RADIUS = 1.01;
 const CLUSTER_RADIUS_DEG = 8; // Grados de distancia para agrupar
@@ -44,6 +44,7 @@ function ClusterMarker({ cluster }) {
   const pos = latLngToVector3(cluster.center.lat, cluster.center.lng, GLOBE_RADIUS);
   const count = cluster.events.length;
   const setSelectedEvent = useStore(state => state.setSelectedEvent);
+  const [isHovered, setIsHovered] = useState(false);
   
   // Si es un solo evento, usamos su color específico
   if (count === 1) {
@@ -86,11 +87,13 @@ function ClusterMarker({ cluster }) {
   const handlePointerOver = (e) => {
     e.stopPropagation();
     document.body.style.cursor = 'pointer';
+    setIsHovered(true);
   };
 
   const handlePointerOut = (e) => {
     e.stopPropagation();
     document.body.style.cursor = 'default';
+    setIsHovered(false);
   };
 
   return (
@@ -104,6 +107,25 @@ function ClusterMarker({ cluster }) {
           {count.toString()}
         </Text>
       </Billboard>
+
+      {isHovered && (
+        <Html distanceFactor={2} zIndexRange={[100, 0]}>
+          <div className="bg-slate-900/90 backdrop-blur-md text-white px-3 py-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-slate-700 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
+            <div className="text-[12px] font-bold text-slate-200 mb-1 flex items-center gap-1">
+              <span className="text-[14px]">📍</span>
+              <span>{count} Eventos Agrupados</span>
+            </div>
+            {cluster.type === 'Earthquake' && (
+              <div className="text-[10px] text-orange-400 font-bold mb-1">
+                Magnitud Máxima: {maxMag}
+              </div>
+            )}
+            <div className="text-[9px] text-slate-400 mt-1">
+              {new Date(recentDate).toLocaleString()}
+            </div>
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
