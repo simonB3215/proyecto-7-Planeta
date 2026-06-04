@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
+import { useStore } from '../store/useStore';
 
 const CountryBorders = React.memo(() => {
   const [geoData, setGeoData] = useState(null);
@@ -10,7 +11,10 @@ const CountryBorders = React.memo(() => {
         if (!res.ok) throw new Error("Fetch failed");
         return res.json();
       })
-      .then((data) => setGeoData(data))
+      .then((data) => {
+        setGeoData(data);
+        useStore.getState().setGeoJsonData(data);
+      })
       .catch((err) => console.error("Error loading country borders:", err));
   }, []);
 

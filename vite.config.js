@@ -8,4 +8,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api/firms': {
+        target: 'https://firms.modaps.eosdis.nasa.gov',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/firms/, '')
+      }
+    }
+  }
 })

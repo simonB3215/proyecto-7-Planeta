@@ -4,6 +4,7 @@ import { OrbitControls, Stars, Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import Markers from './Markers';
 import CameraController from './CameraController';
+import { geoContains } from 'd3-geo';
 import CountryBorders from './CountryBorders';
 import { useStore } from '../store/useStore';
 
@@ -11,11 +12,12 @@ export default function Globe() {
   const globeRef = useRef();
   const controlsRef = useRef();
   const timeoutRef = useRef();
-  const pointerDownRef = useRef({ x: 0, y: 0 });
   const [clickedCountry, setClickedCountry] = useState(null);
   
   const isRotating = useStore(state => state.isRotating);
   const lightingMode = useStore(state => state.lightingMode);
+  const geoJsonData = useStore(state => state.geoJsonData);
+  const lastMoveTimeRef = useRef(0);
 
   // Calcular la posición del sol en tiempo real (basado en UTC)
   const sunPosition = useMemo(() => {
@@ -80,51 +82,39 @@ export default function Globe() {
     };
   }, []);
 
-  const handlePointerDown = (e) => {
+  const handlePointerMove = (e) => {
     e.stopPropagation();
-    pointerDownRef.current = { x: e.clientX, y: e.clientY };
-  };
+    if (!e.uv || !geoJsonData || !geoJsonData.features) return;
 
-  const handlePointerUp = async (e) => {
-    e.stopPropagation();
-    if (!e.uv) return;
+    const now = Date.now();
+    if (now - lastMoveTimeRef.current < 50) return; // 50ms throttle
+    lastMoveTimeRef.current = now;
 
-    // Diferenciar arrastre de clic
-    const dx = Math.abs(e.clientX - pointerDownRef.current.x);
-    const dy = Math.abs(e.clientY - pointerDownRef.current.y);
-    if (dx > 3 || dy > 3) return; // Fue un drag (rotación), no ejecutar fetch
-
-    // Convertir el punto de clic mundial a coordenadas locales dentro del grupo en rotación
-    const localPoint = globeRef.current.worldToLocal(e.point.clone());
-    
-    // Multiplicador Z-Fighting: separarlo un 5% de la superficie (radio 1.0 -> 1.05)
-    const hoverPos = localPoint.clone().normalize().multiplyScalar(1.05);
-
-    // Mapeo inverso matemático usando las coordenadas UV
     let lat = (e.uv.y - 0.5) * 180;
     let lng = (e.uv.x - 0.5) * 360;
 
-    setClickedCountry({ position: hoverPos, name: 'Buscando...' });
+    const feature = geoJsonData.features.find(f => geoContains(f, [lng, lat]));
 
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`);
-      const data = await res.json();
-      const country = data.address?.country || 'Ocean';
-      
+    if (feature) {
+      const country = feature.properties.name || 'Unknown';
+      const localPoint = globeRef.current.worldToLocal(e.point.clone());
+      const hoverPos = localPoint.clone().normalize().multiplyScalar(1.05);
+
       setClickedCountry({ position: hoverPos, name: country });
-      
-      // Enviar el país al panel interactivo 2D si es válido
-      if (country !== 'Ocean') {
-        useStore.getState().setSelectedCountry(country);
-      }
+      useStore.getState().setSelectedCountry(country);
 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
         setClickedCountry(null);
       }, 4000);
-    } catch (err) {
+    } else {
       setClickedCountry(null);
     }
+  };
+
+  const handlePointerOut = (e) => {
+    e.stopPropagation();
+    setClickedCountry(null);
   };
 
   return (
@@ -152,7 +142,7 @@ export default function Globe() {
       <Stars radius={100} depth={50} count={1500} factor={4} saturation={0} fade speed={0} />
       
       <group ref={globeRef} position={[0, 0, 0]}>
-        <mesh onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
+        <mesh onPointerMove={handlePointerMove} onPointerOut={handlePointerOut}>
           <sphereGeometry args={[1, 64, 64]} />
           <meshStandardMaterial 
             map={colorMap}

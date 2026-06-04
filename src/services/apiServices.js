@@ -13,16 +13,34 @@ export const fetchEarthquakes = async () => {
 export const fetchEonetEvents = async () => {
   try {
     const res = await fetch('https://eonet.gsfc.nasa.gov/api/v3/events');
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
     useStore.getState().setEonetEvents(data.events || []);
   } catch (error) {
-    console.error('Error fetching NASA EONET:', error);
+    console.error('Error fetching NASA EONET, using fallback data:', error);
+    const today = new Date().toISOString();
+    const mockEvents = [
+      {
+        id: "mock-storm-1",
+        title: "Tormenta Tropical Simulada (Fallback)",
+        categories: [{ id: "severeStorms", title: "Severe Storms" }],
+        geometries: [{ date: today, type: "Point", coordinates: [-80.0, 25.0] }]
+      },
+      {
+        id: "mock-storm-2",
+        title: "Huracán Simulado (Fallback)",
+        categories: [{ id: "severeStorms", title: "Severe Storms" }],
+        geometries: [{ date: today, type: "Point", coordinates: [-60.0, 15.0] }]
+      }
+    ];
+    useStore.getState().setEonetEvents(mockEvents);
   }
 };
 
 export const fetchFirmsFires = async () => {
   try {
-    const res = await fetch('https://firms.modaps.eosdis.nasa.gov/data/active_fire/modis-c6.1/csv/MODIS_C6_1_Global_24h.csv');
+    const res = await fetch('/api/firms/data/active_fire/modis-c6.1/csv/MODIS_C6_1_Global_24h.csv');
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const text = await res.text();
     const lines = text.split('\n').filter(line => line.trim() !== '');
     if (lines.length > 1) {

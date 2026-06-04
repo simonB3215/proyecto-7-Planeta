@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
+import { geoContains } from 'd3-geo';
 
 function getEventStyles(mag) {
   return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
@@ -14,6 +15,7 @@ export default function CountryPanel() {
   const eonetEvents = useStore(state => state.eonetEvents);
   const setSelectedEvent = useStore(state => state.setSelectedEvent);
   const timelineDate = useStore(state => state.timelineDate);
+  const geoJsonData = useStore(state => state.geoJsonData);
 
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -29,14 +31,18 @@ export default function CountryPanel() {
   };
 
   const countryQuery = selectedCountry.toLowerCase();
+  const countryFeature = geoJsonData?.features?.find(f => f.properties.name?.toLowerCase() === countryQuery);
 
   // 1. Filtrar Terremotos
   const countryEarthquakes = earthquakes.filter(eq => {
     if (new Date(eq.properties.time).getTime() > timelineDate) return false;
+    const [lng, lat] = eq.geometry.coordinates;
+
+    if (countryFeature && geoContains(countryFeature, [lng, lat])) return true;
+
     const place = eq.properties.place ? eq.properties.place.toLowerCase() : "";
     if (place.includes(countryQuery)) return true;
     if (isUS(countryQuery)) {
-      const [lng, lat] = eq.geometry.coordinates;
       return checkUSBounds(lng, lat);
     }
     return false;
@@ -46,12 +52,18 @@ export default function CountryPanel() {
   const countryStorms = eonetEvents.filter(ev => {
     if (!ev.geometries?.[0]) return false;
     if (new Date(ev.geometries[0].date).getTime() > timelineDate) return false;
+    
+    let coords = ev.geometries[0].coordinates;
+    while(Array.isArray(coords[0])) coords = coords[0];
+    const lng = coords[0];
+    const lat = coords[1];
+
+    if (countryFeature && geoContains(countryFeature, [lng, lat])) return true;
+
     const title = ev.title ? ev.title.toLowerCase() : "";
     if (title.includes(countryQuery)) return true;
     if (isUS(countryQuery)) {
-      let coords = ev.geometries[0].coordinates;
-      while(Array.isArray(coords[0])) coords = coords[0];
-      return checkUSBounds(coords[0], coords[1]);
+      return checkUSBounds(lng, lat);
     }
     return false;
   }).map(ev => ({ ...ev, eventType: 'Storm', sortDate: new Date(ev.geometries[0].date).getTime() }));
@@ -60,14 +72,16 @@ export default function CountryPanel() {
   const countryFires = firmsFires.filter(fire => {
     if (!fire.latitude || !fire.longitude) return false;
     if (new Date(fire.acq_date).getTime() > timelineDate) return false;
-    // FIRMS a veces no tiene un string de lugar claro que coincida, dependemos fuertemente del Bounding Box si es USA
-    // O si usamos un servicio de geocodificación inverso (no disponible aquí). 
-    // Por simplicidad, los incendios mundiales sin geocodificación de texto solo los mostraremos 
-    // si el país seleccionado es USA usando el fallback geográfico.
-    if (isUS(countryQuery)) {
-      return checkUSBounds(parseFloat(fire.longitude), parseFloat(fire.latitude));
+    
+    const lat = parseFloat(fire.latitude);
+    const lng = parseFloat(fire.longitude);
+
+    if (countryFeature) {
+      return geoContains(countryFeature, [lng, lat]);
+    } else if (isUS(countryQuery)) {
+      return checkUSBounds(lng, lat);
     }
-    return false; // No podemos mapear incendios a países por texto fácilmente sin un geocoder
+    return false;
   }).map((fire, i) => ({ ...fire, id: `fire-${i}`, eventType: 'Fire', sortDate: new Date(fire.acq_date).getTime() }));
 
   // Combinar y ordenar por fecha (más reciente primero)
@@ -109,7 +123,7 @@ export default function CountryPanel() {
       <div className="p-4 overflow-y-auto space-y-3 flex-1 min-h-0 bg-slate-950/50">
         {countryEvents.length === 0 ? (
           <div className="text-sm text-slate-500 text-center py-6">
-            No se detectó actividad sísmica reciente en esta región.
+            No se detectaron eventos recientes en esta región.
           </div>
         ) : (
           countryEvents.map(event => {

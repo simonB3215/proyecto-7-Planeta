@@ -7,12 +7,13 @@ export const useStore = create((set) => ({
   isLoading: false,
   error: null,
   targetLocation: null,
-  selectedEvent: null, // Nuevo estado
+  selectedEvent: null,
   selectedCountry: null,
-  isRotating: true, // Estado para controlar la rotación de la Tierra
-  lightingMode: 'full', // Estado para controlar la iluminación ('full' o 'realtime')
+  isRotating: true,
+  lightingMode: 'full',
   
-  // Nuevos estados para Timeline y Buscador
+  geoJsonData: null,
+  
   timelineDate: Date.now(),
   isPlaying: false,
   searchQuery: '',
@@ -25,7 +26,6 @@ export const useStore = create((set) => ({
   setTargetLocation: (lat, lng) => set({ targetLocation: { lat, lng } }),
   
   setSelectedEvent: (eventData) => {
-    // Automáticamente apuntar la cámara a la ubicación del evento
     if (eventData && eventData.rawLat !== undefined && eventData.rawLng !== undefined) {
       set({ targetLocation: { lat: eventData.rawLat, lng: eventData.rawLng } });
     }
@@ -37,7 +37,8 @@ export const useStore = create((set) => ({
   toggleRotation: () => set((state) => ({ isRotating: !state.isRotating })),
   toggleLighting: () => set((state) => ({ lightingMode: state.lightingMode === 'full' ? 'realtime' : 'full' })),
   
-  // Acciones de Timeline y Buscador
+  setGeoJsonData: (data) => set({ geoJsonData: data }),
+  
   setTimelineDate: (timestamp) => set({ timelineDate: timestamp }),
   togglePlaying: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setSearchQuery: (query) => set({ searchQuery: query })
