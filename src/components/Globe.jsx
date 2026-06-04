@@ -12,7 +12,8 @@ export default function Globe() {
   const globeRef = useRef();
   const controlsRef = useRef();
   const timeoutRef = useRef();
-  const [clickedCountry, setClickedCountry] = useState(null);
+  const pointerDownRef = useRef({ x: 0, y: 0 });
+  const [hoveredCountry, setHoveredCountry] = useState(null);
   
   const isRotating = useStore(state => state.isRotating);
   const lightingMode = useStore(state => state.lightingMode);
@@ -82,6 +83,29 @@ export default function Globe() {
     };
   }, []);
 
+  const handlePointerDown = (e) => {
+    e.stopPropagation();
+    pointerDownRef.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePointerUp = (e) => {
+    e.stopPropagation();
+    if (!e.uv || !geoJsonData || !geoJsonData.features) return;
+
+    // Diferenciar arrastre de clic
+    const dx = Math.abs(e.clientX - pointerDownRef.current.x);
+    const dy = Math.abs(e.clientY - pointerDownRef.current.y);
+    if (dx > 3 || dy > 3) return; // Fue un drag (rotación)
+
+    let lat = (e.uv.y - 0.5) * 180;
+    let lng = (e.uv.x - 0.5) * 360;
+    const feature = geoJsonData.features.find(f => geoContains(f, [lng, lat]));
+
+    if (feature && feature.properties.name) {
+      useStore.getState().setSelectedCountry(feature.properties.name);
+    }
+  };
+
   const handlePointerMove = (e) => {
     e.stopPropagation();
     if (!e.uv || !geoJsonData || !geoJsonData.features) return;
@@ -100,21 +124,20 @@ export default function Globe() {
       const localPoint = globeRef.current.worldToLocal(e.point.clone());
       const hoverPos = localPoint.clone().normalize().multiplyScalar(1.05);
 
-      setClickedCountry({ position: hoverPos, name: country });
-      useStore.getState().setSelectedCountry(country);
+      setHoveredCountry({ position: hoverPos, name: country });
 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
-        setClickedCountry(null);
+        setHoveredCountry(null);
       }, 4000);
     } else {
-      setClickedCountry(null);
+      setHoveredCountry(null);
     }
   };
 
   const handlePointerOut = (e) => {
     e.stopPropagation();
-    setClickedCountry(null);
+    setHoveredCountry(null);
   };
 
   return (
@@ -142,7 +165,7 @@ export default function Globe() {
       <Stars radius={100} depth={50} count={1500} factor={4} saturation={0} fade speed={0} />
       
       <group ref={globeRef} position={[0, 0, 0]}>
-        <mesh onPointerMove={handlePointerMove} onPointerOut={handlePointerOut}>
+        <mesh onPointerMove={handlePointerMove} onPointerOut={handlePointerOut} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
           <sphereGeometry args={[1, 64, 64]} />
           <meshStandardMaterial 
             map={colorMap}
@@ -202,8 +225,8 @@ export default function Globe() {
         <CountryBorders />
 
         {/* País Seleccionado (3D Text) */}
-        {clickedCountry && (
-          <Billboard position={clickedCountry.position}>
+        {hoveredCountry && (
+          <Billboard position={hoveredCountry.position}>
             <Text 
               raycast={() => null}
               fontSize={0.035} 
@@ -215,7 +238,7 @@ export default function Globe() {
               outlineColor="#000000"
               fillOpacity={0.9}
             >
-              {clickedCountry.name.toUpperCase()}
+              {hoveredCountry.name.toUpperCase()}
             </Text>
           </Billboard>
         )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
 import { geoContains } from 'd3-geo';
@@ -30,62 +30,66 @@ export default function CountryPanel() {
     return inContiguousUS || inAlaska || inHawaii;
   };
 
-  const countryQuery = selectedCountry.toLowerCase();
-  const countryFeature = geoJsonData?.features?.find(f => f.properties.name?.toLowerCase() === countryQuery);
-
-  // 1. Filtrar Terremotos
-  const countryEarthquakes = earthquakes.filter(eq => {
-    if (new Date(eq.properties.time).getTime() > timelineDate) return false;
-    const [lng, lat] = eq.geometry.coordinates;
-
-    if (countryFeature && geoContains(countryFeature, [lng, lat])) return true;
-
-    const place = eq.properties.place ? eq.properties.place.toLowerCase() : "";
-    if (place.includes(countryQuery)) return true;
-    if (isUS(countryQuery)) {
-      return checkUSBounds(lng, lat);
-    }
-    return false;
-  }).map(eq => ({ ...eq, eventType: 'Earthquake', sortDate: new Date(eq.properties.time).getTime() }));
-
-  // 2. Filtrar Tormentas (EONET)
-  const countryStorms = eonetEvents.filter(ev => {
-    if (!ev.geometries?.[0]) return false;
-    if (new Date(ev.geometries[0].date).getTime() > timelineDate) return false;
+  const countryEvents = useMemo(() => {
+    if (!selectedCountry) return [];
     
-    let coords = ev.geometries[0].coordinates;
-    while(Array.isArray(coords[0])) coords = coords[0];
-    const lng = coords[0];
-    const lat = coords[1];
+    const countryQuery = selectedCountry.toLowerCase();
+    const countryFeature = geoJsonData?.features?.find(f => f.properties.name?.toLowerCase() === countryQuery);
 
-    if (countryFeature && geoContains(countryFeature, [lng, lat])) return true;
+    // 1. Filtrar Terremotos
+    const countryEarthquakes = earthquakes.filter(eq => {
+      if (new Date(eq.properties.time).getTime() > timelineDate) return false;
+      const [lng, lat] = eq.geometry.coordinates;
 
-    const title = ev.title ? ev.title.toLowerCase() : "";
-    if (title.includes(countryQuery)) return true;
-    if (isUS(countryQuery)) {
-      return checkUSBounds(lng, lat);
-    }
-    return false;
-  }).map(ev => ({ ...ev, eventType: 'Storm', sortDate: new Date(ev.geometries[0].date).getTime() }));
+      if (countryFeature && geoContains(countryFeature, [lng, lat])) return true;
 
-  // 3. Filtrar Incendios
-  const countryFires = firmsFires.filter(fire => {
-    if (!fire.latitude || !fire.longitude) return false;
-    if (new Date(fire.acq_date).getTime() > timelineDate) return false;
-    
-    const lat = parseFloat(fire.latitude);
-    const lng = parseFloat(fire.longitude);
+      const place = eq.properties.place ? eq.properties.place.toLowerCase() : "";
+      if (place.includes(countryQuery)) return true;
+      if (isUS(countryQuery)) {
+        return checkUSBounds(lng, lat);
+      }
+      return false;
+    }).map(eq => ({ ...eq, eventType: 'Earthquake', sortDate: new Date(eq.properties.time).getTime() }));
 
-    if (countryFeature) {
-      return geoContains(countryFeature, [lng, lat]);
-    } else if (isUS(countryQuery)) {
-      return checkUSBounds(lng, lat);
-    }
-    return false;
-  }).map((fire, i) => ({ ...fire, id: `fire-${i}`, eventType: 'Fire', sortDate: new Date(fire.acq_date).getTime() }));
+    // 2. Filtrar Tormentas (EONET)
+    const countryStorms = eonetEvents.filter(ev => {
+      if (!ev.geometries?.[0]) return false;
+      if (new Date(ev.geometries[0].date).getTime() > timelineDate) return false;
+      
+      let coords = ev.geometries[0].coordinates;
+      while(Array.isArray(coords[0])) coords = coords[0];
+      const lng = coords[0];
+      const lat = coords[1];
 
-  // Combinar y ordenar por fecha (más reciente primero)
-  const countryEvents = [...countryEarthquakes, ...countryStorms, ...countryFires].sort((a, b) => b.sortDate - a.sortDate);
+      if (countryFeature && geoContains(countryFeature, [lng, lat])) return true;
+
+      const title = ev.title ? ev.title.toLowerCase() : "";
+      if (title.includes(countryQuery)) return true;
+      if (isUS(countryQuery)) {
+        return checkUSBounds(lng, lat);
+      }
+      return false;
+    }).map(ev => ({ ...ev, eventType: 'Storm', sortDate: new Date(ev.geometries[0].date).getTime() }));
+
+    // 3. Filtrar Incendios
+    const countryFires = firmsFires.filter(fire => {
+      if (!fire.latitude || !fire.longitude) return false;
+      if (new Date(fire.acq_date).getTime() > timelineDate) return false;
+      
+      const lat = parseFloat(fire.latitude);
+      const lng = parseFloat(fire.longitude);
+
+      if (countryFeature) {
+        return geoContains(countryFeature, [lng, lat]);
+      } else if (isUS(countryQuery)) {
+        return checkUSBounds(lng, lat);
+      }
+      return false;
+    }).map((fire, i) => ({ ...fire, id: `fire-${i}`, eventType: 'Fire', sortDate: new Date(fire.acq_date).getTime() }));
+
+    // Combinar y ordenar por fecha (más reciente primero)
+    return [...countryEarthquakes, ...countryStorms, ...countryFires].sort((a, b) => b.sortDate - a.sortDate);
+  }, [selectedCountry, earthquakes, eonetEvents, firmsFires, timelineDate, geoJsonData]);
 
   return (
     <div 
