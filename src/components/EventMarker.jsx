@@ -16,27 +16,70 @@ export default function EventMarker({ position, color, size, eventData }) {
   const isFire = eventData.type === 'Fire';
   const isSelected = selectedEvent?.id === eventData.id;
 
+  const coreMaterialRef = useRef();
+  
   useFrame((state, delta) => {
+    const radarMode = useStore.getState().radarMode;
+    let radarIntensity = 1;
+    
+    if (radarMode) {
+      const t = state.clock.elapsedTime * 1.0; // Velocidad de rotación mucho más majestuosa
+      let sweepAngle = (Math.PI * 2) - (t % (Math.PI * 2));
+      if (sweepAngle < 0) sweepAngle += Math.PI * 2;
+      
+      let angle = Math.atan2(position.x, position.z);
+      if (angle < 0) angle += Math.PI * 2;
+      
+      let diff = sweepAngle - angle;
+      if (diff < 0) diff += Math.PI * 2;
+      
+      // FADE IN Y FADE OUT (Cero saltos bruscos)
+      const trailLength = Math.PI * 1.5; // La estela dura 3/4 del planeta
+      const leadingEdge = 0.5; // Se enciende suavemente ANTES de que el radar lo golpee
+      
+      if (diff <= trailLength) {
+        radarIntensity = 1.0 - (diff / trailLength);
+        radarIntensity = Math.pow(radarIntensity, 1.2); // Decaimiento muy orgánico
+      } else if (diff >= (Math.PI * 2) - leadingEdge) {
+        radarIntensity = (diff - ((Math.PI * 2) - leadingEdge)) / leadingEdge;
+        radarIntensity = Math.pow(radarIntensity, 2); // Curva suave para entrar
+      } else {
+        radarIntensity = 0;
+      }
+      
+      if (coreMaterialRef.current) {
+        coreMaterialRef.current.transparent = true;
+        coreMaterialRef.current.opacity = radarIntensity;
+      }
+    } else if (coreMaterialRef.current && coreMaterialRef.current.opacity !== 1) {
+      coreMaterialRef.current.opacity = 1;
+      coreMaterialRef.current.transparent = false;
+    }
+
     if (isEarthquake && waveRef.current) {
       const mag = eventData.mag || 1;
-      const speed = 1.0 + (mag * 0.2); // Sismos fuertes se expanden más rápido
-      const maxScale = mag * 1.2; // Sismos fuertes tienen ondas más grandes
+      const speed = 1.0 + (mag * 0.2);
+      const maxScale = mag * 1.2;
       
       waveRef.current.scale.x += delta * speed;
       waveRef.current.scale.y += delta * speed;
       waveRef.current.scale.z += delta * speed;
-      waveRef.current.material.opacity -= delta * (speed / maxScale);
       
-      if (waveRef.current.scale.x > maxScale) {
+      const currentScale = waveRef.current.scale.x;
+      const waveOpacity = 0.8 * (1 - (currentScale - 1) / (maxScale - 1));
+      
+      if (currentScale > maxScale) {
         waveRef.current.scale.set(1, 1, 1);
-        waveRef.current.material.opacity = 0.8;
+        waveRef.current.material.opacity = radarMode ? 0.8 * radarIntensity : 0.8;
+      } else {
+        waveRef.current.material.opacity = radarMode ? Math.max(0, waveOpacity * radarIntensity) : Math.max(0, waveOpacity);
       }
     }
     
     if (isFire && waveRef.current) {
-      // Simulación de calor/fuego latiendo
       const pulse = Math.sin(state.clock.elapsedTime * 5) * 0.5 + 0.5;
-      waveRef.current.material.opacity = 0.3 + (pulse * 0.5);
+      const baseOpacity = 0.3 + (pulse * 0.5);
+      waveRef.current.material.opacity = radarMode ? baseOpacity * radarIntensity : baseOpacity;
       waveRef.current.scale.setScalar(1.2 + (pulse * 0.3));
     }
   });
@@ -67,6 +110,7 @@ export default function EventMarker({ position, color, size, eventData }) {
       >
         <sphereGeometry args={[size, 16, 16]} />
         <meshStandardMaterial 
+          ref={coreMaterialRef}
           color={color}
           emissive={color}
           emissiveIntensity={2}

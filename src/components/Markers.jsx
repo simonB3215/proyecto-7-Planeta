@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
 import EventMarker from './EventMarker';
 import { Billboard, Text, Html } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 
 const GLOBE_RADIUS = 1.01;
 const CLUSTER_RADIUS_DEG = 8; // Grados de distancia para agrupar
@@ -46,8 +47,42 @@ function ClusterMarker({ cluster }) {
   const selectedEvent = useStore(state => state.selectedEvent);
   const setSelectedEvent = useStore(state => state.setSelectedEvent);
   const [isHovered, setIsHovered] = useState(false);
+  const coreMaterialRef = useRef();
   
   const isSelected = selectedEvent && cluster.events.some(ev => ev.id === selectedEvent.id);
+  
+  useFrame((state) => {
+    const radarMode = useStore.getState().radarMode;
+    if (radarMode) {
+      const t = state.clock.elapsedTime * 1.0;
+      let sweepAngle = (Math.PI * 2) - (t % (Math.PI * 2));
+      if (sweepAngle < 0) sweepAngle += Math.PI * 2;
+      
+      let angle = Math.atan2(pos.x, pos.z);
+      if (angle < 0) angle += Math.PI * 2;
+      
+      let diff = sweepAngle - angle;
+      if (diff < 0) diff += Math.PI * 2;
+      
+      let radarIntensity = 0;
+      const trailLength = Math.PI * 1.5;
+      const leadingEdge = 0.5;
+      
+      if (diff <= trailLength) {
+        radarIntensity = 1.0 - (diff / trailLength);
+        radarIntensity = Math.pow(radarIntensity, 1.2);
+      } else if (diff >= (Math.PI * 2) - leadingEdge) {
+        radarIntensity = (diff - ((Math.PI * 2) - leadingEdge)) / leadingEdge;
+        radarIntensity = Math.pow(radarIntensity, 2);
+      }
+      
+      if (coreMaterialRef.current) {
+        coreMaterialRef.current.opacity = 0.8 * radarIntensity;
+      }
+    } else if (coreMaterialRef.current && coreMaterialRef.current.opacity !== 0.8) {
+      coreMaterialRef.current.opacity = 0.8;
+    }
+  });
   
   // Si es un solo evento, usamos su color específico
   if (count === 1) {
@@ -103,7 +138,7 @@ function ClusterMarker({ cluster }) {
     <group position={pos}>
       <mesh onClick={handleClick} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
         <sphereGeometry args={[0.02 + (count * 0.001), 16, 16]} />
-        <meshBasicMaterial color={clusterColor} transparent={true} opacity={0.8} />
+        <meshBasicMaterial ref={coreMaterialRef} color={clusterColor} transparent={true} opacity={0.8} />
       </mesh>
 
       {(isHovered || isSelected) && (

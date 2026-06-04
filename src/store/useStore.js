@@ -41,5 +41,8 @@ export const useStore = create((set) => ({
   
   setTimelineDate: (timestamp) => set({ timelineDate: timestamp }),
   togglePlaying: () => set((state) => ({ isPlaying: !state.isPlaying })),
-  setSearchQuery: (query) => set({ searchQuery: query })
+  setSearchQuery: (query) => set({ searchQuery: query }),
+  
+  radarMode: false,
+  toggleRadarMode: () => set((state) => ({ radarMode: !state.radarMode }))
 }));
