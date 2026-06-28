@@ -122,7 +122,7 @@ app nunca quede vacía si una API falla o hay bloqueo CORS.
 | Fuente | Endpoint | Datos | Fallback |
 |--------|----------|-------|----------|
 | **USGS** | `earthquake.usgs.gov/.../all_day.geojson` | Terremotos (24 h) | — |
-| **NASA EONET** | `eonet.gsfc.nasa.gov/api/v3/events` | Volcanes, tormentas, eventos extremos | Tormentas simuladas |
+| **NASA EONET** | `eonet.gsfc.nasa.gov/api/v3/events` | Volcanes (resto descartado) | Volcanes simulados |
 | **NASA FIRMS** | `/api/firms/...MODIS_C6_1_Global_24h.csv` | Anomalías térmicas / incendios | ~22 focos simulados |
 
 > ⚠️ **Proxy de FIRMS**: NASA FIRMS no permite CORS desde el navegador. [`vite.config.js`](vite.config.js)
@@ -175,14 +175,19 @@ Fuente única de verdad reutilizada por marcadores 3D, chips de filtro y tooltip
 
 | Tipo | Color | Hex | Efecto especial |
 |------|-------|-----|-----------------|
-| 🔥 Incendios | Rojo Carmesí Neón | `#FF3366` | Parpadeo (flicker) |
-| 🌋 Volcanes | Ámbar Brillante | `#FF9900` | Núcleo blanco incandescente |
-| 🌪️ Tormentas | Cian Eléctrico | `#00E5FF` | Geometría translúcida |
-| ⚡ Terremotos | Dorado Vibrante | `#FFD700` | Anillo sísmico expansivo |
-| ☣️ Eventos Extremos | Magenta Profundo | `#B026FF` | — |
+| Incendios (`Flame`) | Rojo Escarlata | `#FF2400` | Parpadeo (flicker) |
+| Volcanes (`Mountain`) | Naranja Oscuro | `#FF8C00` | Núcleo blanco incandescente |
+| Terremotos (`Activity`) | Naranja Profundo | `#FF5722` | Anillo sísmico expansivo |
 
-`eonetCategoryToType()` normaliza las categorías crudas de EONET
-(`volcanoes`, `wildfires`, `severeStorms`, …) a estos tipos internos.
+> **Solo 3 categorías.** La app procesa únicamente Incendios, Volcanes y Terremotos.
+> Tormentas y Eventos Extremos fueron eliminados por completo (estado, marcadores,
+> filtros y mapeo de API). `eonetCategoryToType()` solo acepta `volcanoes`; el resto se
+> descarta (`null`), y [`apiServices.js`](src/services/apiServices.js) filtra EONET a
+> volcanes antes de guardar para no sobrecargar el estado.
+
+> **Colores parametrizados (no hardcodeados).** Los materiales 3D no llevan códigos de
+> color literales: `EventMarker` recibe `color`, `coreColor` y `emissiveIntensity` como
+> **props inyectadas** desde la config externa [`palette.js`](src/utils/palette.js).
 
 ### Renderizado — [`EventMarker.jsx`](src/components/EventMarker.jsx)
 

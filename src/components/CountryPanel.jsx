@@ -50,8 +50,8 @@ export default function CountryPanel() {
       return false;
     }).map(eq => ({ ...eq, eventType: 'Earthquake', sortDate: new Date(eq.properties.time).getTime() }));
 
-    // 2. Filtrar Tormentas (EONET)
-    const countryStorms = eonetEvents.filter(ev => {
+    // 2. Filtrar Volcanes (EONET)
+    const countryVolcanoes = eonetEvents.filter(ev => {
       if (!ev.geometries?.[0]) return false;
       if (new Date(ev.geometries[0].date).getTime() > timelineDate) return false;
       
@@ -68,7 +68,7 @@ export default function CountryPanel() {
         return checkUSBounds(lng, lat);
       }
       return false;
-    }).map(ev => ({ ...ev, eventType: 'Storm', sortDate: new Date(ev.geometries[0].date).getTime() }));
+    }).map(ev => ({ ...ev, eventType: 'Volcano', sortDate: new Date(ev.geometries[0].date).getTime() }));
 
     // 3. Filtrar Incendios
     const countryFires = firmsFires.filter(fire => {
@@ -87,7 +87,7 @@ export default function CountryPanel() {
     }).map((fire, i) => ({ ...fire, id: `fire-${i}`, eventType: 'Fire', sortDate: new Date(fire.acq_date).getTime() }));
 
     // Combinar y ordenar por fecha (más reciente primero)
-    return [...countryEarthquakes, ...countryStorms, ...countryFires].sort((a, b) => b.sortDate - a.sortDate);
+    return [...countryEarthquakes, ...countryVolcanoes, ...countryFires].sort((a, b) => b.sortDate - a.sortDate);
   }, [selectedCountry, earthquakes, eonetEvents, firmsFires, timelineDate, geoJsonData]);
 
   if (!selectedCountry) return null;
@@ -161,23 +161,23 @@ export default function CountryPanel() {
               );
             }
             
-            if (event.eventType === 'Storm') {
+            if (event.eventType === 'Volcano') {
               return (
-                <div 
+                <div
                   key={event.id}
                   onClick={() => {
                     let coords = event.geometries[0].coordinates;
                     while(Array.isArray(coords[0])) coords = coords[0];
                     const pos = latLngToVector3(parseFloat(coords[1]), parseFloat(coords[0]), 1.01);
-                    setSelectedEvent({ 
-                      id: event.id, type: 'Storm', title: event.title, 
-                      date: event.geometries[0].date, pos 
+                    setSelectedEvent({
+                      id: event.id, type: 'Volcano', title: event.title,
+                      date: event.geometries[0].date, pos
                     });
                   }}
-                  className="group border-l-4 border-blue-500 bg-blue-950/20 hover:bg-blue-900/30 rounded-r-lg p-3 cursor-pointer transition-all mb-2"
+                  className="group border-l-4 border-orange-500 bg-orange-950/20 hover:bg-orange-900/30 rounded-r-lg p-3 cursor-pointer transition-all mb-2"
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-blue-400 font-bold text-xs">{event.categories[0]?.title || 'Tormenta'}</span>
+                    <span className="text-orange-400 font-bold text-xs">{event.categories[0]?.title || 'Volcán'}</span>
                     <span className="text-slate-500 text-[10px]">
                       {new Date(event.geometries[0].date).toLocaleDateString()}
                     </span>

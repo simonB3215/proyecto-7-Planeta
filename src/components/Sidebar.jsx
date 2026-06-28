@@ -22,7 +22,7 @@ export default function Sidebar() {
   const formatEventType = (type) => {
     if (type.toLowerCase() === 'earthquake') return 'Actividad Sísmica';
     if (type.toLowerCase() === 'fire') return 'Anomalía Térmica / Incendio';
-    if (type.toLowerCase() === 'storm') return 'Tormenta / Clima Severo';
+    if (type.toLowerCase() === 'volcano') return 'Actividad Volcánica';
     return type;
   };
 

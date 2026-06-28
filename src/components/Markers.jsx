@@ -6,7 +6,7 @@ import EventMarker from './EventMarker';
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { Layers } from 'lucide-react';
-import { EVENT_TYPES, getEventColor, eonetCategoryToType } from '../utils/palette';
+import { EVENT_TYPES, getPaletteFor, eonetCategoryToType } from '../utils/palette';
 
 const GLOBE_RADIUS = 1.01;
 const CLUSTER_RADIUS_DEG = 8; // Grados de distancia para agrupar
@@ -51,7 +51,9 @@ function ClusterMarker({ cluster }) {
   const [isHovered, setIsHovered] = useState(false);
   const coreMaterialRef = useRef();
 
-  const clusterColor = getEventColor(cluster.type);
+  // Config (color, intensidad, núcleo) inyectada desde la paleta externa.
+  const cfg = getPaletteFor(cluster.type);
+  const clusterColor = cfg.color;
 
   useFrame((state) => {
     const radarMode = useStore.getState().radarMode;
@@ -64,10 +66,20 @@ function ClusterMarker({ cluster }) {
     }
   });
 
-  // Si es un solo evento, delegamos al marcador individual (que se auto-colorea por tipo).
+  // Si es un solo evento, delegamos al marcador individual (color inyectado).
   if (count === 1) {
     const ev = cluster.events[0];
-    return <EventMarker key={ev.id} position={pos} size={ev.size} eventData={ev.data} />;
+    return (
+      <EventMarker
+        key={ev.id}
+        position={pos}
+        size={ev.size}
+        color={cfg.color}
+        coreColor={cfg.core}
+        emissiveIntensity={cfg.emissiveIntensity}
+        eventData={ev.data}
+      />
+    );
   }
 
   // Clúster: tomamos la magnitud máxima y la fecha más representativa.
@@ -144,7 +156,7 @@ export default function Markers() {
   const timelineDate = useStore((s) => s.timelineDate);
   const filters = useAppStore((s) => s.filters);
 
-  // EARTHQUAKES
+  // EARTHQUAKES (USGS)
   const eqClusters = useMemo(() => {
     const validEvents = earthquakes
       .filter((eq) => new Date(eq.properties.time).getTime() <= timelineDate)
@@ -172,7 +184,7 @@ export default function Markers() {
     return clusterEvents(validEvents, CLUSTER_RADIUS_DEG);
   }, [earthquakes, timelineDate]);
 
-  // FIRES
+  // FIRES (NASA FIRMS)
   const fireClusters = useMemo(() => {
     const validEvents = firmsFires
       .filter((fire) => new Date(fire.acq_date).getTime() <= timelineDate)
@@ -197,10 +209,12 @@ export default function Markers() {
     return clusterEvents(validEvents, CLUSTER_RADIUS_DEG);
   }, [firmsFires, timelineDate]);
 
-  // EONET (volcanes, tormentas, eventos extremos) — pocos, sin clustering.
-  const eonetMarkers = useMemo(() => {
+  // VOLCANOES (NASA EONET) — pocos, sin clustering.
+  const volcanoCfg = getPaletteFor(EVENT_TYPES.VOLCANO);
+  const volcanoMarkers = useMemo(() => {
     return eonetEvents
-      .slice(0, 40)
+      .filter((ev) => eonetCategoryToType(ev.categories?.[0]?.id) === EVENT_TYPES.VOLCANO)
+      .slice(0, 80)
       .map((ev) => {
         if (!ev.geometries || ev.geometries.length === 0) return null;
         const coords = ev.geometries[0].coordinates;
@@ -209,29 +223,29 @@ export default function Markers() {
         const eventTime = new Date(ev.geometries[0].date).getTime();
         if (eventTime > timelineDate) return null;
 
-        const type = eonetCategoryToType(ev.categories?.[0]?.id);
         const pos = latLngToVector3(coords[1], coords[0], GLOBE_RADIUS);
-        return {
-          type,
-          node: (
-            <EventMarker
-              key={ev.id}
-              position={pos}
-              size={0.015}
-              eventData={{
-                id: ev.id,
-                type,
-                title: ev.title,
-                date: ev.geometries[0].date,
-                pos,
-                rawLat: coords[1],
-                rawLng: coords[0],
-              }}
-            />
-          ),
-        };
+        return (
+          <EventMarker
+            key={ev.id}
+            position={pos}
+            size={0.015}
+            color={volcanoCfg.color}
+            coreColor={volcanoCfg.core}
+            emissiveIntensity={volcanoCfg.emissiveIntensity}
+            eventData={{
+              id: ev.id,
+              type: EVENT_TYPES.VOLCANO,
+              title: ev.title,
+              date: ev.geometries[0].date,
+              pos,
+              rawLat: coords[1],
+              rawLng: coords[0],
+            }}
+          />
+        );
       })
       .filter(Boolean);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eonetEvents, timelineDate]);
 
   // Filtros por categoría (controlados desde el panel lateral).
@@ -242,7 +256,7 @@ export default function Markers() {
       {show(EVENT_TYPES.EARTHQUAKE) &&
         eqClusters.map((c) => <ClusterMarker key={c.id} cluster={c} />)}
       {show(EVENT_TYPES.FIRE) && fireClusters.map((c) => <ClusterMarker key={c.id} cluster={c} />)}
-      {eonetMarkers.filter((m) => show(m.type)).map((m) => m.node)}
+      {show(EVENT_TYPES.VOLCANO) && volcanoMarkers}
     </group>
   );
 }

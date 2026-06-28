@@ -131,8 +131,8 @@ function App() {
                     <div className="text-rose-500 font-bold text-xl">{useStore.getState().firmsFires.length}</div>
                   </div>
                   <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
-                    <div className="text-slate-400 mb-1 font-medium">Tormentas</div>
-                    <div className="text-blue-400 font-bold text-xl">{eonetEvents.length}</div>
+                    <div className="text-slate-400 mb-1 font-medium">Volcanes</div>
+                    <div className="text-orange-400 font-bold text-xl">{eonetEvents.length}</div>
                   </div>
                 </div>
               )}
@@ -192,23 +192,23 @@ function App() {
                     .filter(ev => ev.title.toLowerCase().includes(searchQuery.toLowerCase()) && ev.geometries?.[0] && new Date(ev.geometries[0].date).getTime() <= timelineDate)
                     .slice(0, 20).map((ev) => {
                       let isSelected = selectedEvent?.id === ev.id;
-                      let activeClasses = isSelected ? 'bg-slate-800 border-l-[6px] shadow-[inset_0_0_15px_rgba(59,130,246,0.2)]' : 'bg-blue-950/20 hover:bg-blue-900/30';
+                      let activeClasses = isSelected ? 'bg-slate-800 border-l-[6px] shadow-[inset_0_0_15px_rgba(249,115,22,0.2)]' : 'bg-orange-950/20 hover:bg-orange-900/30';
 
                       return (
-                        <div key={ev.id} 
+                        <div key={ev.id}
                              onClick={() => {
                            const coords = ev.geometries?.[0]?.coordinates;
                            if (!coords) return;
                            let firstPt = coords;
                            while(Array.isArray(firstPt[0])) { firstPt = firstPt[0]; }
                            const pos = latLngToVector3(parseFloat(firstPt[1]), parseFloat(firstPt[0]), 1.01);
-                           setSelectedEvent({ id: ev.id, type: 'Storm', title: ev.title, date: ev.geometries[0].date, pos, rawLat: parseFloat(firstPt[1]), rawLng: parseFloat(firstPt[0]) });
-                           
-                           // Extraer región para eventos meteorológicos
+                           setSelectedEvent({ id: ev.id, type: 'Volcano', title: ev.title, date: ev.geometries[0].date, pos, rawLat: parseFloat(firstPt[1]), rawLng: parseFloat(firstPt[0]) });
+
+                           // Extraer región para el evento volcánico
                            useStore.getState().setSelectedCountry(ev.title);
                          }}
-                         className={`border-l-4 border-blue-500 pl-3 py-2 ${activeClasses} rounded-r-md transition-all cursor-pointer active:scale-95 mb-2`}>
-                      <div className="text-blue-400 font-bold text-xs">{ev.categories[0]?.title || 'Evento Meteorológico'}</div>
+                         className={`border-l-4 border-orange-500 pl-3 py-2 ${activeClasses} rounded-r-md transition-all cursor-pointer active:scale-95 mb-2`}>
+                      <div className="text-orange-400 font-bold text-xs">{ev.categories[0]?.title || 'Volcán'}</div>
                       <div className="text-slate-300 truncate" title={ev.title}>{ev.title}</div>
                     </div>
                       );

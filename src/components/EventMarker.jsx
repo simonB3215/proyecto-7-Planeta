@@ -2,9 +2,9 @@ import React, { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { Flame, Mountain, Tornado, Zap, Biohazard, MapPin } from 'lucide-react';
+import { Flame, Mountain, Activity } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { getPaletteFor, EVENT_TYPES } from '../utils/palette';
+import { EVENT_TYPES } from '../utils/palette';
 
 const UP_Z = new THREE.Vector3(0, 0, 1);
 
@@ -15,37 +15,45 @@ function toVector3(p) {
   return new THREE.Vector3();
 }
 
+// Iconos por tipo (lucide-react, sin emojis).
 const TYPE_ICON = {
   [EVENT_TYPES.FIRE]: Flame,
   [EVENT_TYPES.VOLCANO]: Mountain,
-  [EVENT_TYPES.STORM]: Tornado,
-  [EVENT_TYPES.EARTHQUAKE]: Zap,
-  [EVENT_TYPES.EXTREME]: Biohazard,
+  [EVENT_TYPES.EARTHQUAKE]: Activity,
+};
+
+const TYPE_LABEL = {
+  [EVENT_TYPES.FIRE]: 'Incendio',
+  [EVENT_TYPES.VOLCANO]: 'Volcán',
+  [EVENT_TYPES.EARTHQUAKE]: 'Terremoto',
 };
 
 /**
- * Marcador 3D individual con materiales neón emisivos (paleta Cyber-Scientific).
- * - Incendios: parpadeo (flicker).
- * - Volcanes: núcleo blanco brillante.
- * - Tormentas: esfera translúcida.
- * - Terremotos: anillo (RingGeometry) que se expande como onda sísmica.
+ * Marcador 3D individual. Maneja únicamente tres tipos: Incendio, Volcán y
+ * Terremoto. El color es PARAMETRIZADO (inyectado por props), no hardcodeado:
+ *   - `color`: acento del material emisivo.
+ *   - `coreColor`: núcleo interno (volcanes).
+ *   - `emissiveIntensity`: intensidad base del brillo.
+ * Efectos: incendios parpadean; terremotos emiten una onda sísmica (RingGeometry).
  */
-function EventMarker({ position, size = 0.012, eventData }) {
+function EventMarker({
+  position,
+  size = 0.012,
+  color,
+  coreColor = '#FFFFFF',
+  emissiveIntensity = 2.4,
+  eventData,
+}) {
   const setSelectedEvent = useStore((s) => s.setSelectedEvent);
-  // Selector derivado a booleano: solo re-renderiza al cambiar la selección de ESTE marcador.
   const isSelected = useStore((s) => s.selectedEvent?.id === eventData.id);
 
   const [isHovered, setIsHovered] = useState(false);
 
-  const palette = useMemo(() => getPaletteFor(eventData.type), [eventData.type]);
-  const { color, emissiveIntensity } = palette;
-
   const isEarthquake = eventData.type === EVENT_TYPES.EARTHQUAKE;
   const isFire = eventData.type === EVENT_TYPES.FIRE;
   const isVolcano = eventData.type === EVENT_TYPES.VOLCANO;
-  const isStorm = eventData.type === EVENT_TYPES.STORM;
 
-  // Orienta el anillo sísmico tangente a la superficie del globo (normal = dirección radial).
+  // Orienta el anillo sísmico tangente a la superficie del globo (normal radial).
   const ringQuat = useMemo(() => {
     const dir = toVector3(position).clone().normalize();
     return new THREE.Quaternion().setFromUnitVectors(UP_Z, dir);
@@ -103,22 +111,24 @@ function EventMarker({ position, size = 0.012, eventData }) {
     setIsHovered(false);
   };
 
+  const TypeIcon = TYPE_ICON[eventData.type] || Activity;
+
   return (
     <group position={position}>
-      {/* Halo / glow aditivo (más amplio y suave en tormentas) */}
-      <mesh scale={isStorm ? 1.9 : 1.5}>
+      {/* Halo / glow aditivo */}
+      <mesh scale={1.5}>
         <sphereGeometry args={[size, 16, 16]} />
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={isStorm ? 0.16 : 0.25}
+          opacity={0.25}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           toneMapped={false}
         />
       </mesh>
 
-      {/* Núcleo emisivo neón (interactivo) */}
+      {/* Núcleo emisivo (color inyectado) */}
       <mesh onClick={handleClick} onPointerOver={handleOver} onPointerOut={handleOut}>
         <sphereGeometry args={[size, 20, 20]} />
         <meshStandardMaterial
@@ -126,19 +136,17 @@ function EventMarker({ position, size = 0.012, eventData }) {
           color={color}
           emissive={color}
           emissiveIntensity={emissiveIntensity}
-          transparent={isStorm}
-          opacity={isStorm ? 0.5 : 1}
           toneMapped={false}
         />
       </mesh>
 
-      {/* Núcleo blanco incandescente para volcanes */}
+      {/* Núcleo interno incandescente para volcanes (coreColor inyectado) */}
       {isVolcano && (
         <mesh>
           <sphereGeometry args={[size * 0.45, 16, 16]} />
           <meshStandardMaterial
-            color="#FFFFFF"
-            emissive="#FFFFFF"
+            color={coreColor}
+            emissive={coreColor}
             emissiveIntensity={3}
             toneMapped={false}
           />
@@ -166,11 +174,8 @@ function EventMarker({ position, size = 0.012, eventData }) {
           <div className="bg-slate-950/60 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
             <div className="font-bold text-slate-200 mb-2 flex flex-col gap-1">
               <div className="flex items-center gap-2 text-sm">
-                {(() => {
-                  const TypeIcon = TYPE_ICON[eventData.type] || MapPin;
-                  return <TypeIcon size={16} style={{ color }} />;
-                })()}
-                <span style={{ color }}>{palette.label}</span>
+                <TypeIcon size={16} style={{ color }} />
+                <span style={{ color }}>{TYPE_LABEL[eventData.type]}</span>
               </div>
               <div className="flex items-center gap-2 border-t border-white/10 pt-2 mt-1 text-sm">
                 <span className="truncate max-w-[250px] block">{eventData.title}</span>

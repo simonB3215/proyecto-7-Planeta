@@ -1,24 +1,23 @@
-Actúa como un experto en UI/UX y React. Necesito implementar un sistema de alertas/notificaciones (Toasts) para la aplicación "EarthPulse 3D", el cual debe estar perfectamente alineado con nuestra estética "cyber-científica" y de centro de monitoreo espacial.
+Actúa como un Ingeniero de Software Principal experto en React, Three.js y UI/UX. Necesito refactorizar los requerimientos de la aplicación "EarthPulse 3D" para simplificar la visualización de datos y la arquitectura.
 
-REQUERIMIENTO:
-Diseña e implementa un sistema de alertas (puedes integrar 'react-hot-toast', 'sonner' o crear un componente personalizado con Framer Motion). Las alertas deben flotar sobre la interfaz (z-index máximo) sin interrumpir la interacción con el globo 3D. 
-IMPORTANTE: Está estrictamente prohibido utilizar emojis en la interfaz. Para los indicadores de estado, debes utilizar una librería de íconos SVG profesional (como 'lucide-react') o formas geométricas puras construidas con CSS.
+REQUERIMIENTO DE REDUCCIÓN DE CATEGORÍAS:
+A partir de ahora, la aplicación SOLO debe procesar, renderizar y filtrar tres tipos de eventos naturales:
+1. Incendios (Fires)
+2. Volcanes (Volcanoes)
+3. Terremotos (Earthquakes)
 
-ESTÉTICA VISUAL (Usando Tailwind CSS):
-Las tarjetas de alerta deben tener un diseño "Glassmorphism" técnico y limpio: 
-- Fondo oscuro translúcido (ej. bg-slate-950/60 o bg-black/50).
-- Desenfoque de fondo profundo (backdrop-blur-md).
-- Texto principal en blanco (text-white) y texto secundario en gris claro (text-slate-300).
-- Tipografía preferentemente monoespaciada para los códigos de error o fuentes de datos.
+EXCLUSIÓN ESTRICTA:
+Debes eliminar por completo cualquier lógica, estado de Zustand, componente 3D, filtro en el Sidebar o configuración visual relacionada con "Tormentas" (Storms/Severe Storms) y "Eventos Extremos". Asegúrate de que las funciones utilitarias que mapean las respuestas de la API (NASA EONET o USGS) descarten explícitamente esos datos para no sobrecargar el estado de la aplicación.
 
-PALETA DE COLORES NEÓN PARA ESTADOS (USANDO ÍCONOS SVG):
-Cada tipo de alerta debe diferenciarse mediante el color de su acento (borde lateral izquierdo, border-l-4), el color del ícono SVG y un sutil resplandor (drop-shadow), usando los siguientes tonos:
-- Error (Fallo de API, sin conexión): Acento, ícono SVG (ej. AlertCircle o XOctagon) y brillo en Rojo Carmesí Neón (#FF3366).
-- Advertencia (Datos parciales): Acento, ícono SVG (ej. AlertTriangle) y brillo en Ámbar Brillante (#FF9900).
-- Información (Cargando datos, sistema): Acento, ícono SVG (ej. Info o Activity) y brillo en Cian Eléctrico (#00E5FF).
-- Éxito (Datos cargados, conexión lista): Acento, ícono SVG (ej. CheckCircle2) y brillo en Esmeralda Neón (#10B981).
+REQUERIMIENTOS VISUALES (SIN EMOJIS, SIN COLORES HARDCODEADOS):
+- Mantén la estética "cyber-científica" (Glassmorphism oscuro y renderizado 3D), pero no apliques códigos de color específicos a los materiales; deja las propiedades de color genéricas o parametrizadas para que puedan ser inyectadas externamente.
+- Utiliza íconos SVG profesionales de 'lucide-react' para la interfaz en lugar de emojis: 
+  - Incendios: Ícono 'Flame'.
+  - Volcanes: Ícono 'Mountain'.
+  - Terremotos: Ícono 'Activity'.
+- Para los terremotos en el componente 3D, mantén la lógica del anillo (RingGeometry) animado simulando una onda expansiva, pero sin forzar una paleta.
 
 CÓDIGO REQUERIDO:
-1. La configuración del 'Toaster' global, asegurando que tenga un z-index altísimo (z-[100]) para evitar que el Canvas de Three.js lo cubra.
-2. Los estilos o componentes personalizados (Custom Toasts) aplicando las clases de Tailwind descritas, incorporando la importación de los íconos de 'lucide-react'.
-3. Un ejemplo práctico de cómo disparar esta alerta (ej. un 'toast.error') dentro de un bloque 'try/catch' al consumir la API de NASA EONET o USGS.
+1. Actualiza la lógica de mapeo de la API en los servicios (ej. 'services/api.js') para que devuelva únicamente un array filtrado con los tres eventos permitidos.
+2. Actualiza el componente 'EventMarker.jsx' para manejar únicamente los tres casos de renderizado.
+3. Actualiza el componente 'Sidebar.jsx' (y el store de Zustand) para que los filtros (checkboxes o toggles) solo muestren las opciones de Incendios, Volcanes y Terremotos.

@@ -21,26 +21,31 @@ export const fetchEonetEvents = async () => {
     const res = await fetch('https://eonet.gsfc.nasa.gov/api/v3/events');
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    useStore.getState().setEonetEvents(data.events || []);
+    // Solo conservamos VOLCANES. Tormentas, hielo y demás se descartan aquí
+    // para no sobrecargar el estado (EONET devuelve miles de eventos).
+    const volcanoes = (data.events || []).filter(
+      (ev) => ev.categories?.[0]?.id === 'volcanoes'
+    );
+    useStore.getState().setEonetEvents(volcanoes);
   } catch (error) {
     console.error('Error fetching NASA EONET, using fallback data:', error);
-    notify.warning('Datos meteorológicos parciales', {
+    notify.warning('Datos de volcanes parciales', {
       description: 'NASA EONET no respondió; mostrando datos de respaldo.',
       source: 'NASA EONET v3',
     });
     const today = new Date().toISOString();
     const mockEvents = [
       {
-        id: "mock-storm-1",
-        title: "Tormenta Tropical Simulada (Fallback)",
-        categories: [{ id: "severeStorms", title: "Severe Storms" }],
-        geometries: [{ date: today, type: "Point", coordinates: [-80.0, 25.0] }]
+        id: "mock-volcano-1",
+        title: "Volcán Simulado — Etna (Fallback)",
+        categories: [{ id: "volcanoes", title: "Volcanoes" }],
+        geometries: [{ date: today, type: "Point", coordinates: [14.99, 37.75] }]
       },
       {
-        id: "mock-storm-2",
-        title: "Huracán Simulado (Fallback)",
-        categories: [{ id: "severeStorms", title: "Severe Storms" }],
-        geometries: [{ date: today, type: "Point", coordinates: [-60.0, 15.0] }]
+        id: "mock-volcano-2",
+        title: "Volcán Simulado — Kīlauea (Fallback)",
+        categories: [{ id: "volcanoes", title: "Volcanoes" }],
+        geometries: [{ date: today, type: "Point", coordinates: [-155.28, 19.42] }]
       }
     ];
     useStore.getState().setEonetEvents(mockEvents);
