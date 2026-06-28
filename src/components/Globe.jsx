@@ -143,11 +143,12 @@ export default function Globe() {
 
   return (
     <>
-      <ambientLight intensity={lightingMode === 'full' ? 1.5 : 0.03} />
-      
-      {/* Luz global cuando está en Full (no rota con la Tierra) */}
+      {/* Luz ambiental mínima: alto contraste, lado oscuro de la Tierra casi negro */}
+      <ambientLight intensity={lightingMode === 'full' ? 0.22 : 0.02} />
+
+      {/* Luz direccional intensa para un día nítido (no rota con la Tierra) */}
       {lightingMode === 'full' && (
-        <directionalLight position={[10, 10, 10]} intensity={1.5} />
+        <directionalLight position={[10, 10, 10]} intensity={2.4} />
       )}
       
       <CameraController controlsRef={controlsRef} globeRef={globeRef} />
@@ -163,7 +164,7 @@ export default function Globe() {
         autoRotate={false}
       />
       
-      <Stars radius={100} depth={50} count={1500} factor={4} saturation={0} fade speed={0} />
+      <Stars radius={120} depth={60} count={2500} factor={1} saturation={0} fade speed={0} />
       
       <group ref={globeRef} position={[0, 0, 0]}>
         <mesh onPointerMove={handlePointerMove} onPointerOut={handlePointerOut} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
@@ -234,14 +235,14 @@ export default function Globe() {
           </Billboard>
         )}
 
-        {/* Halo Atmosférico */}
+        {/* Halo Atmosférico ultradelgado y tenue */}
         <mesh raycast={() => null}>
-          <sphereGeometry args={[1.02, 64, 64]} />
-          <meshBasicMaterial 
-            color="#4ea8ff" 
-            transparent={true} 
-            opacity={0.15} 
-            side={THREE.BackSide} 
+          <sphereGeometry args={[1.005, 64, 64]} />
+          <meshBasicMaterial
+            color="#4ea8ff"
+            transparent={true}
+            opacity={0.08}
+            side={THREE.BackSide}
           />
         </mesh>
         

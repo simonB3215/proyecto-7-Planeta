@@ -38,20 +38,25 @@ function App() {
   }, []);
 
   return (
-    <div className="w-full h-screen bg-slate-950 text-slate-200 overflow-hidden relative isolate">
+    <div className="w-full h-screen bg-black text-neutral-200 overflow-hidden relative isolate">
       
       {/* 3D Canvas Layer — fijo a pantalla completa, detrás de la UI (sin scrollbars) */}
       <div data-tutorial="canvas" className="fixed inset-0 w-full h-full -z-10">
-        <Canvas camera={{ position: [0, 0, 2.8], fov: 45, near: 0.1, far: 1000 }}>
+        <Canvas
+          dpr={[1, 2]}
+          gl={{ antialias: true, powerPreference: 'high-performance' }}
+          camera={{ position: [0, 0, 2.8], fov: 45, near: 0.1, far: 1000 }}
+        >
           <Suspense fallback={null}>
             <Globe />
-            {/* Post-procesamiento: el Bloom solo afecta a los marcadores emisivos
-                (toneMapped={false} -> superan el umbral de luminancia; la Tierra no). */}
-            <EffectComposer disableNormalPass>
+            {/* Post-procesamiento técnico: Bloom nítido tipo LED/láser (umbral alto,
+                poca difusión) que solo afecta a los marcadores emisivos, no a la Tierra. */}
+            <EffectComposer multisampling={8} disableNormalPass>
               <Bloom
-                luminanceThreshold={0.55}
-                luminanceSmoothing={0.85}
-                intensity={1.1}
+                luminanceThreshold={1.1}
+                luminanceSmoothing={0.2}
+                intensity={0.7}
+                radius={0.4}
                 mipmapBlur
               />
             </EffectComposer>
@@ -116,22 +121,22 @@ function App() {
               {/* Global Stats */}
               {!isLoading && (
                 <div className="grid grid-cols-2 gap-2 text-xs mt-1 mb-3">
-                  <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
-                    <div className="text-slate-400 mb-1 font-medium">Sismos Activos</div>
+                  <div className="bg-white/5 p-3 rounded-sm border border-white/10 flex flex-col justify-between">
+                    <div className="text-neutral-400 mb-1 font-mono text-[10px] tracking-widest uppercase">Sismos Activos</div>
                     <div className="text-orange-400 font-bold text-xl">{earthquakes.length}</div>
                   </div>
-                  <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
-                    <div className="text-slate-400 mb-1 font-medium">Magnitud Máx.</div>
+                  <div className="bg-white/5 p-3 rounded-sm border border-white/10 flex flex-col justify-between">
+                    <div className="text-neutral-400 mb-1 font-mono text-[10px] tracking-widest uppercase">Magnitud Máx.</div>
                     <div className="text-red-400 font-bold text-xl">
                       {earthquakes.length > 0 ? Math.max(...earthquakes.map(eq => eq.properties.mag || 0)).toFixed(1) : 0}
                     </div>
                   </div>
-                  <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
-                    <div className="text-slate-400 mb-1 font-medium">Anomalías Térmicas</div>
+                  <div className="bg-white/5 p-3 rounded-sm border border-white/10 flex flex-col justify-between">
+                    <div className="text-neutral-400 mb-1 font-mono text-[10px] tracking-widest uppercase">Anomalías Térmicas</div>
                     <div className="text-rose-500 font-bold text-xl">{useStore.getState().firmsFires.length}</div>
                   </div>
-                  <div className="bg-slate-900/40 p-3 rounded-lg border border-slate-800 flex flex-col justify-between">
-                    <div className="text-slate-400 mb-1 font-medium">Volcanes</div>
+                  <div className="bg-white/5 p-3 rounded-sm border border-white/10 flex flex-col justify-between">
+                    <div className="text-neutral-400 mb-1 font-mono text-[10px] tracking-widest uppercase">Volcanes</div>
                     <div className="text-orange-400 font-bold text-xl">{eonetEvents.length}</div>
                   </div>
                 </div>

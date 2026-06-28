@@ -31,36 +31,35 @@ function NotificationCard({ t, type, title, description, source }) {
         scale: t.visible ? 1 : 0.95,
       }}
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-      className="pointer-events-auto w-80 max-w-[90vw] flex items-start gap-3 rounded-xl
-                 border-l-4 border-y border-r border-white/10 bg-slate-950/60 backdrop-blur-md
-                 shadow-2xl px-4 py-3"
+      className="pointer-events-auto w-80 max-w-[90vw] flex items-start gap-3 rounded-sm
+                 border-l-2 border-y border-r border-white/10 bg-black/80 backdrop-blur-sm
+                 shadow-lg px-4 py-3"
       style={{ borderLeftColor: color }}
       role="status"
       aria-live="polite"
     >
-      <Icon
-        size={20}
-        strokeWidth={2}
-        className="shrink-0 mt-0.5"
-        style={{ color, filter: `drop-shadow(0 0 6px ${color})` }}
-      />
+      <Icon size={18} strokeWidth={1.5} className="shrink-0 mt-0.5" style={{ color }} />
 
       <div className="flex-1 min-w-0">
-        <p className="text-white font-semibold text-sm leading-snug">{title}</p>
+        <p className="font-mono text-[11px] tracking-widest uppercase text-neutral-100 leading-snug">
+          {title}
+        </p>
         {description && (
-          <p className="text-slate-300 text-xs mt-1 leading-relaxed">{description}</p>
+          <p className="font-mono text-[10px] tracking-wide text-neutral-400 mt-1 leading-relaxed">
+            {description}
+          </p>
         )}
-        <p className="font-mono text-[10px] mt-1.5 uppercase tracking-wider" style={{ color }}>
+        <p className="font-mono text-[9px] mt-1.5 uppercase tracking-widest" style={{ color }}>
           {source || label}
         </p>
       </div>
 
       <button
         onClick={() => toast.dismiss(t.id)}
-        className="text-slate-500 hover:text-white transition-colors shrink-0"
+        className="text-neutral-500 hover:text-white transition-colors shrink-0"
         aria-label="Cerrar notificación"
       >
-        <X size={16} />
+        <X size={14} strokeWidth={1.5} />
       </button>
     </motion.div>
   );

@@ -309,15 +309,18 @@ UV del raycast: `lat = (uv.y - 0.5)·180`, `lng = (uv.x - 0.5)·360`, resueltas 
 
 ## 🎨 Sistema de diseño (Glassmorphism)
 
+Estética **HUD táctico (aeroespacial, nivel SpaceX/Palantir)**: fondo negro puro, paneles
+flotantes oscuros de bordes rectos y trazo fino, tipografía de ingeniería monoespaciada.
 Definido en [`src/index.css`](src/index.css) bajo `@layer components`:
 
 ```css
-.glass-panel { @apply bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-lg shadow-xl; }
-.glass-card  { @apply bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl; }
+.glass-panel { @apply bg-black/80 backdrop-blur-sm border border-white/10 rounded-sm shadow-lg; }
+.glass-card  { @apply bg-black/80 backdrop-blur-sm border border-white/10 rounded-sm shadow-lg; }
+.hud-text    { @apply font-mono text-[10px] tracking-widest uppercase text-neutral-300; }
 ```
 
-Estética "centro de comando satelital": fondos translúcidos oscuros, desenfoque, bordes
-suaves `white/10`. Tipografías: **Inter** (sans) y **JetBrains Mono** (datos técnicos).
+Datos, coordenadas y tooltips usan `font-mono text-[10px] tracking-widest uppercase`. Iconos
+**lucide-react** con `strokeWidth={1.5}`. Tipografías: **Inter** (sans) y **JetBrains Mono** (datos).
 
 ---
 

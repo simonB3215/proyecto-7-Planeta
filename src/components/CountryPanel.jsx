@@ -87,14 +87,14 @@ export default function CountryPanel() {
             className="text-slate-400 hover:text-white transition-colors w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center"
             title={isExpanded ? "Minimizar" : "Expandir"}
           >
-            {isExpanded ? <Minus size={18} /> : <Plus size={18} />}
+            {isExpanded ? <Minus size={18} strokeWidth={1.5} /> : <Plus size={18} strokeWidth={1.5} />}
           </button>
           <button
             onClick={clearSelectedCountry}
             className="text-slate-400 hover:text-white transition-colors w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center"
             title="Cerrar"
           >
-            <X size={18} />
+            <X size={18} strokeWidth={1.5} />
           </button>
         </div>
       </div>
@@ -103,12 +103,13 @@ export default function CountryPanel() {
 
       <div className="p-4 overflow-y-auto space-y-3 flex-1 min-h-0 bg-slate-950/50">
         {countryEvents.length === 0 ? (
-          <div className="flex flex-col items-center text-center gap-3 py-8 px-4 m-1 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/10">
-            <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
-              <SearchX size={22} />
-            </div>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              No hay eventos sísmicos, volcánicos ni incendios activos registrados en este territorio.
+          <div className="flex flex-col items-center text-center gap-3 py-8 px-4 m-1 rounded-sm bg-black/80 border border-white/10">
+            <SearchX size={24} strokeWidth={1.5} className="text-neutral-500" />
+            <p className="font-mono text-[10px] tracking-widest uppercase text-neutral-300 leading-relaxed">
+              Sin actividad detectada en la región
+            </p>
+            <p className="font-mono text-[9px] tracking-widest uppercase text-neutral-600">
+              0 eventos · sismos / volcanes / incendios
             </p>
           </div>
         ) : (

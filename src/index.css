@@ -8,21 +8,25 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-200 font-sans overflow-hidden antialiased;
+    @apply bg-black text-neutral-200 font-sans overflow-hidden antialiased;
     margin: 0;
     padding: 0;
   }
 }
 
 @layer components {
-  /* Glassmorphism "centro de comando satelital" — Requerimiento 1 */
+  /* HUD táctico: paneles flotantes oscuros, bordes rectos/mínimos y trazo fino */
   .glass-panel {
-    @apply bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-lg shadow-xl;
+    @apply bg-black/80 backdrop-blur-sm border border-white/10 rounded-sm shadow-lg;
   }
 
-  /* Variante para tarjetas/info flotantes */
   .glass-card {
-    @apply bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl;
+    @apply bg-black/80 backdrop-blur-sm border border-white/10 rounded-sm shadow-lg;
+  }
+
+  /* Tipografía de ingeniería para datos, coordenadas y tooltips */
+  .hud-text {
+    @apply font-mono text-[10px] tracking-widest uppercase text-neutral-300;
   }
 
   .tech-text {

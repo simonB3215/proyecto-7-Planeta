@@ -42,9 +42,9 @@ export function HelpButton() {
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.92 }}
       title="Ver tutorial / Ayuda"
-      className="pointer-events-auto w-12 h-12 rounded-full flex items-center justify-center bg-slate-950/40 backdrop-blur-md border border-white/10 text-slate-200 shadow-2xl hover:border-cyan-400 hover:text-cyan-300 transition-colors"
+      className="pointer-events-auto w-12 h-12 rounded-sm flex items-center justify-center bg-black/80 backdrop-blur-sm border border-white/10 text-neutral-300 shadow-lg hover:border-cyan-400 hover:text-cyan-300 transition-colors"
     >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <circle cx="12" cy="12" r="10" />
         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
         <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -185,7 +185,7 @@ export default function TutorialSpotlight() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.92, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 280, damping: 26 }}
-              className="pointer-events-auto relative w-full max-w-md rounded-2xl bg-slate-950/40 backdrop-blur-xl border border-white/10 shadow-[0_0_60px_rgba(0,229,255,0.08)] p-8 text-slate-100"
+              className="pointer-events-auto relative w-full max-w-md rounded-sm bg-black/80 backdrop-blur-sm border border-white/10 shadow-[0_0_40px_rgba(0,229,255,0.06)] p-8 text-neutral-100"
             >
               {/* Indicador de progreso */}
               <div className="flex items-center gap-2 mb-6">

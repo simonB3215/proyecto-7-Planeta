@@ -130,17 +130,19 @@ function ClusterMarker({ cluster }) {
 
       {(isHovered || isSelected) && (
         <Html zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="bg-slate-950/60 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
-            <div className="font-bold text-slate-200 mb-2 flex items-center gap-2 text-sm">
-              <Layers size={16} style={{ color: clusterColor }} />
-              <span>{count} Eventos Agrupados</span>
+          <div className="bg-black/80 backdrop-blur-sm border border-white/10 rounded-sm px-3 py-2 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none">
+            <div className="flex items-center gap-2">
+              <Layers size={14} strokeWidth={1.5} style={{ color: clusterColor }} />
+              <span className="font-mono text-[10px] tracking-widest uppercase text-neutral-300">
+                {count} eventos · clúster
+              </span>
             </div>
             {cluster.type === EVENT_TYPES.EARTHQUAKE && (
-              <div className="text-xs font-bold mb-1" style={{ color: clusterColor }}>
-                Magnitud Máxima: {maxMag}
+              <div className="font-mono text-[10px] tracking-widest uppercase mt-1 border-t border-white/10 pt-1.5" style={{ color: clusterColor }}>
+                MAG MAX {maxMag}
               </div>
             )}
-            <div className="text-[11px] text-slate-400 mt-2">
+            <div className="font-mono text-[9px] tracking-widest uppercase text-neutral-500 mt-1">
               {new Date(recentDate).toLocaleString()}
             </div>
           </div>

@@ -115,22 +115,22 @@ function EventMarker({
 
   return (
     <group position={position}>
-      {/* Halo / glow aditivo */}
-      <mesh scale={1.5}>
-        <sphereGeometry args={[size, 16, 16]} />
+      {/* Malla de telemetría (wireframe fino — sin glow difuso) */}
+      <mesh scale={1.7}>
+        <sphereGeometry args={[size, 12, 12]} />
         <meshBasicMaterial
           color={color}
+          wireframe
           transparent
-          opacity={0.25}
-          blending={THREE.AdditiveBlending}
+          opacity={0.35}
           depthWrite={false}
           toneMapped={false}
         />
       </mesh>
 
-      {/* Núcleo emisivo (color inyectado) */}
+      {/* Núcleo emisivo HD (color inyectado, esfera de 64 segmentos) */}
       <mesh onClick={handleClick} onPointerOver={handleOver} onPointerOut={handleOut}>
-        <sphereGeometry args={[size, 20, 20]} />
+        <sphereGeometry args={[size, 64, 64]} />
         <meshStandardMaterial
           ref={coreMatRef}
           color={color}
@@ -143,7 +143,7 @@ function EventMarker({
       {/* Núcleo interno incandescente para volcanes (coreColor inyectado) */}
       {isVolcano && (
         <mesh>
-          <sphereGeometry args={[size * 0.45, 16, 16]} />
+          <sphereGeometry args={[size * 0.45, 64, 64]} />
           <meshStandardMaterial
             color={coreColor}
             emissive={coreColor}
@@ -153,10 +153,10 @@ function EventMarker({
         </mesh>
       )}
 
-      {/* Onda sísmica expansiva (anillo tangente a la superficie) */}
+      {/* Onda sísmica expansiva: barrido de radar (AdditiveBlending) */}
       {isEarthquake && (
         <mesh ref={ringRef} quaternion={ringQuat}>
-          <ringGeometry args={[size * 1.6, size * 2.1, 48]} />
+          <ringGeometry args={[size * 1.6, size * 1.9, 64]} />
           <meshBasicMaterial
             ref={ringMatRef}
             color={color}
@@ -165,30 +165,29 @@ function EventMarker({
             side={THREE.DoubleSide}
             depthWrite={false}
             toneMapped={false}
+            blending={THREE.AdditiveBlending}
           />
         </mesh>
       )}
 
       {(isHovered || isSelected) && (
         <Html zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="bg-slate-950/60 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
-            <div className="font-bold text-slate-200 mb-2 flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-sm">
-                <TypeIcon size={16} style={{ color }} />
-                <span style={{ color }}>{TYPE_LABEL[eventData.type]}</span>
-              </div>
-              <div className="flex items-center gap-2 border-t border-white/10 pt-2 mt-1 text-sm">
-                <span className="truncate max-w-[250px] block">{eventData.title}</span>
-              </div>
+          <div className="bg-black/80 backdrop-blur-sm border border-white/10 rounded-sm px-3 py-2 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none">
+            <div className="flex items-center gap-2 mb-1.5">
+              <TypeIcon size={14} strokeWidth={1.5} style={{ color }} />
+              <span className="font-mono text-[10px] tracking-widest uppercase" style={{ color }}>
+                {TYPE_LABEL[eventData.type]}
+              </span>
             </div>
-
+            <div className="font-mono text-[10px] tracking-wider uppercase text-neutral-300 border-t border-white/10 pt-1.5 max-w-[260px] truncate">
+              {eventData.title}
+            </div>
             {isEarthquake && eventData.mag != null && (
-              <div className="text-xs font-bold mb-1" style={{ color }}>
-                Magnitud: {eventData.mag}
+              <div className="font-mono text-[10px] tracking-widest uppercase mt-1" style={{ color }}>
+                MAG {eventData.mag}
               </div>
             )}
-
-            <div className="text-[11px] text-slate-400 mt-2">
+            <div className="font-mono text-[9px] tracking-widest uppercase text-neutral-500 mt-1">
               {new Date(eventData.date).toLocaleString()}
             </div>
           </div>

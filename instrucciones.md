@@ -1,18 +1,28 @@
-Actúa como un Ingeniero de Software Principal experto en React, Zustand y lógica de filtrado de datos espaciales. Estoy experimentando un bug crítico en la aplicación "EarthPulse 3D".
+Actúa como un Ingeniero de Software Principal y Diseñador UX de interfaces aeroespaciales (nivel SpaceX/Palantir). Tengo mi proyecto "EarthPulse 3D" construido con React, Three.js (R3F), Zustand y Tailwind CSS.
 
-DESCRIPCIÓN DEL BUG:
-Cuando el usuario selecciona un país específico en el Sidebar que actualmente NO tiene eventos activos, el mapa 3D sigue mostrando marcadores (falsos positivos o mantiene el estado anterior) en lugar de quedar vacío. 
+Necesito que realices una refactorización integral siguiendo ESTRICTAMENTE el siguiente PLAN DE IMPLEMENTACIÓN paso a paso. Tu tarea es analizar este plan y entregarme el código refactorizado para los componentes clave.
 
-REQUERIMIENTO DE CORRECCIÓN:
-Necesito que refactorices la función de filtrado (probablemente en el store de Zustand o en un custom hook) para garantizar que el filtrado geográfico sea estricto y que el estado de la UI se limpie correctamente.
+### PLAN DE IMPLEMENTACIÓN:
 
-PASOS A IMPLEMENTAR:
-1. Limpieza de Estado (Stale State): Asegúrate de que si la función de filtrado determina que hay 0 eventos para el país seleccionado, el array de eventos a renderizar ('filteredEvents') se actualice explícitamente a un array vacío '[]'. El '<Canvas>' de Three.js debe reaccionar a esto y desmontar todos los '<EventMarker>'.
-2. Filtrado Estricto: Revisa la lógica que compara el país seleccionado con los datos de la API. Si estás filtrando por texto, asegúrate de hacer una comparación exacta (exact match) en minúsculas. Si estás filtrando por coordenadas (Bounding Box), verifica que la validación matemática (latitud y longitud dentro de los límites del país) sea correcta.
-3. Manejo de 'Empty State' (UI): Si el array resultante es '[]', la interfaz (Sidebar) debe mostrar un mensaje claro usando la estética Glassmorphism establecida. Ejemplo: "No hay eventos sísmicos, volcánicos ni incendios activos registrados en este territorio". Utiliza íconos de 'lucide-react' (ej. Map o SearchX).
-4. Restricción de Categorías: Recuerda que la aplicación SOLO procesa Incendios, Volcanes y Terremotos.
+**PASO 1: Arquitectura de Datos y Corrección de Bugs (Estado y Filtrado)**
+- Restricción de Categorías: Refactoriza la lógica para que la aplicación SOLO procese y renderice Incendios, Volcanes y Terremotos. Elimina cualquier rastro de "Tormentas" o "Eventos Extremos" en utilidades, store de Zustand y filtros de la UI.
+- Bug de Filtrado Geográfico: En la lógica de selección de país, si el país seleccionado tiene 0 eventos activos, el estado de eventos a renderizar DEBE setearse explícitamente como un array vacío '[]' para garantizar que el Canvas desmonte los marcadores.
+- Interfaz de Empty State: Si no hay eventos en el país filtrado, muestra un mensaje técnico en el panel lateral (ej. "SIN ACTIVIDAD DETECTADA EN LA REGIÓN").
 
-CÓDIGO REQUERIDO:
-1. El código corregido del store de Zustand (ej. 'useAppStore.js') o el bloque exacto de la función 'filterEventsByCountry'.
-2. El fragmento del componente que renderiza los marcadores en Three.js, asegurando que escuche correctamente los cambios del store.
-3. El componente de 'Empty State' para el Sidebar utilizando Tailwind CSS.
+**PASO 2: Entorno 3D HD y Vacío Espacial (App.jsx y Globe.jsx)**
+- Fotorrealismo y Resolución: En '<Canvas>', inyecta 'dpr={[1, 2]}' y 'gl={{ antialias: true, powerPreference: "high-performance" }}'.
+- Estética Espacial: El fondo de la aplicación debe ser negro puro ('bg-black'). Elimina luces ambientales innecesarias. El lado oscuro de la Tierra debe ser negro absoluto (alto contraste). El halo atmosférico debe ser ultradelgado (escala 1.005) y tenue.
+- Post-Procesamiento Técnico: Usa '<EffectComposer multisampling={8}>' y ajusta el '<Bloom>' con un 'luminanceThreshold' alto para lograr una luz nítida, estilo láser o LED, eliminando brillos difusos.
+- Estrellas: Reduce drásticamente el tamaño y aplica 'saturation={0}' en '<Stars>'.
+
+**PASO 3: Marcadores de Telemetría Aeroespacial (EventMarker.jsx)**
+- Geometría Perfecta: Actualiza las geometrías de las esferas a 'args={[size, 64, 64]}' para eliminar cualquier borde poligonal.
+- Diseño de Precisión: Reemplaza los halos difusos por anillos finos ('RingGeometry') o mallas ('wireframe={true}') que simulen telemetría pura.
+- Terremotos: Configura la onda expansiva con 'blending={THREE.AdditiveBlending}' simulando un barrido de radar.
+- Nota de Color: NO hardcodees paletas de colores en este archivo; mantén la arquitectura donde los colores se inyectan por props, pero adapta los materiales emisivos ('emissiveIntensity') para que el brillo sea elegante.
+
+**PASO 4: Interfaz HUD Táctica (Tailwind CSS)**
+- Prohibición de Emojis: Reemplaza cualquier emoji en la UI por íconos vectoriales de 'lucide-react' (strokeWidth={1.5}).
+- UI Minimalista: Elimina el glassmorphism grueso. Reemplázalo por paneles flotantes 'bg-black/80' con bordes rectos o mínimos ('rounded-sm') y un trazo muy fino ('border-white/10').
+- Tipografía de Ingeniería: Aplica clases como 'font-mono text-[10px] tracking-widest uppercase text-neutral-300' para todos los datos, coordenadas y tooltips.
+- Notificaciones: Estructura un sistema de alertas (Toasts) técnico y oscuro que respete esta misma estética para manejar los estados de la API.
