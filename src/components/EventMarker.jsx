@@ -73,14 +73,6 @@ function EventMarker({
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    const radarMode = useStore.getState().radarMode;
-
-    // Pulso global de radar (todos los marcadores laten al unísono, nunca a 0).
-    let radarIntensity = 1;
-    if (radarMode) {
-      const pulse = Math.pow(Math.sin(t * 2.0) * 0.5 + 0.5, 1.5);
-      radarIntensity = 0.2 + pulse * 0.8;
-    }
 
     // Flicker para incendios (ruido pseudo-aleatorio combinando dos senoidales).
     let flicker = 1;
@@ -89,8 +81,7 @@ function EventMarker({
     }
 
     if (coreMatRef.current) {
-      coreMatRef.current.emissiveIntensity =
-        emissiveIntensity * flicker * (radarMode ? radarIntensity : 1);
+      coreMatRef.current.emissiveIntensity = emissiveIntensity * flicker;
     }
 
     // Onda sísmica: el anillo crece y se desvanece en bucle.
@@ -100,7 +91,7 @@ function EventMarker({
       const phase = (t % period) / period; // 0 -> 1
       const scale = 1 + phase * (1.5 + mag * 0.6);
       ringRef.current.scale.set(scale, scale, scale);
-      ringMatRef.current.opacity = (1 - phase) * 0.9 * (radarMode ? radarIntensity : 1);
+      ringMatRef.current.opacity = (1 - phase) * 0.9;
     }
   });
 

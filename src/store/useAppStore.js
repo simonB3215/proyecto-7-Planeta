@@ -22,27 +22,57 @@ const defaultFilters = ALL_CATEGORIES.reduce((acc, type) => {
 // overlay completo y diálogo centrado).
 export const TUTORIAL_STEPS = [
   {
-    id: 'welcome',
+    id: 'welcome', // Paso 0: compuerta de configuración gráfica (diseño propio).
     title: 'Bienvenido a EarthPulse 3D',
     body: 'Monitoreo planetario en tiempo real.',
     target: null,
   },
   {
-    id: 'globe',
-    title: 'Navegación',
-    body: 'Arrastra para rotar el planeta, usa la rueda del mouse para hacer zoom.',
+    id: 'navigation',
+    title: 'Navegación del planeta',
+    body: 'Arrastra para rotar la Tierra y usa la rueda del ratón para acercar o alejar. Haz clic en el océano o el vacío para deseleccionar.',
     target: '[data-tutorial="canvas"]',
   },
   {
-    id: 'filters',
-    title: 'Filtros',
-    body: 'Usa este panel para ocultar o mostrar eventos por categoría.',
+    id: 'panel',
+    title: 'Panel de eventos activos',
+    body: 'Busca por país o región y revisa la lista de sismos, volcanes e incendios detectados, con sus estadísticas globales.',
     target: '[data-tutorial="sidebar"]',
   },
   {
+    id: 'filters',
+    title: 'Filtros por categoría',
+    body: 'Activa o desactiva cada tipo de evento (Incendios, Volcanes, Terremotos) para mostrarlos u ocultarlos en el globo.',
+    target: '[data-tutorial="filters"]',
+  },
+  {
+    id: 'lighting',
+    title: 'Iluminación',
+    body: 'Alterna entre iluminación total del planeta y luz solar en tiempo real (día/noche según la hora UTC).',
+    target: '[data-tutorial="lighting"]',
+  },
+  {
+    id: 'rotation',
+    title: 'Rotación automática',
+    body: 'Pausa o reanuda el giro automático del planeta para inspeccionar una región con calma.',
+    target: '[data-tutorial="rotation"]',
+  },
+  {
+    id: 'quality',
+    title: 'Calidad gráfica',
+    body: 'Cicla entre Baja, Media y Alta para ajustar el rendimiento a tu equipo. Baja desactiva efectos y aligera las mallas.',
+    target: '[data-tutorial="quality"]',
+  },
+  {
+    id: 'help',
+    title: 'Ayuda',
+    body: 'Pulsa este botón en cualquier momento para volver a abrir este tutorial.',
+    target: '[data-tutorial="help"]',
+  },
+  {
     id: 'details',
-    title: 'Detalles',
-    body: 'Haz clic en cualquier marcador brillante para ver los datos específicos del evento.',
+    title: 'Detalles del evento',
+    body: 'Haz clic en cualquier marcador brillante sobre el globo para ver los datos específicos del evento.',
     target: null,
   },
 ];

@@ -10,7 +10,7 @@ export default function CategoryFilters() {
   const toggleFilter = useAppStore((s) => s.toggleFilter);
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div data-tutorial="filters" className="flex flex-wrap gap-2">
       {Object.entries(EVENT_PALETTE).map(([type, cfg]) => {
         const active = filters[type] !== false;
         return (

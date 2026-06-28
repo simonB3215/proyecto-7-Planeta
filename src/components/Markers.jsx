@@ -1,10 +1,9 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { useAppStore } from '../store/useAppStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
 import EventMarker from './EventMarker';
 import { Html } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
 import { Layers } from 'lucide-react';
 import { EVENT_TYPES, getPaletteFor, eonetCategoryToType } from '../utils/palette';
 import { makeCountryPredicate } from '../utils/countryFilter';
@@ -51,23 +50,11 @@ function ClusterMarker({ cluster }) {
     (s) => !!s.selectedEvent && cluster.events.some((ev) => ev.id === s.selectedEvent.id)
   );
   const [isHovered, setIsHovered] = useState(false);
-  const coreMaterialRef = useRef();
   const clusterSeg = getGraphicsProfile(useStore((s) => s.graphicsMode)).clusterSphere;
 
   // Config (color, intensidad, núcleo) inyectada desde la paleta externa.
   const cfg = getPaletteFor(cluster.type);
   const clusterColor = cfg.color;
-
-  useFrame((state) => {
-    const radarMode = useStore.getState().radarMode;
-    if (!coreMaterialRef.current) return;
-    if (radarMode) {
-      const pulse = Math.pow(Math.sin(state.clock.elapsedTime * 2.0) * 0.5 + 0.5, 1.5);
-      coreMaterialRef.current.emissiveIntensity = 0.4 + pulse * 2.2;
-    } else {
-      coreMaterialRef.current.emissiveIntensity = 2.4;
-    }
-  });
 
   // Si es un solo evento, delegamos al marcador individual (color inyectado).
   if (count === 1) {
@@ -122,7 +109,6 @@ function ClusterMarker({ cluster }) {
       <mesh onClick={handleClick} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
         <sphereGeometry args={[0.02 + count * 0.001, clusterSeg, clusterSeg]} />
         <meshStandardMaterial
-          ref={coreMaterialRef}
           color={clusterColor}
           emissive={clusterColor}
           emissiveIntensity={2.4}

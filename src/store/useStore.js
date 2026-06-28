@@ -46,9 +46,6 @@ export const useStore = create((set) => ({
   togglePlaying: () => set((state) => ({ isPlaying: !state.isPlaying })),
   setSearchQuery: (query) => set({ searchQuery: query }),
   
-  radarMode: false,
-  toggleRadarMode: () => set((state) => ({ radarMode: !state.radarMode })),
-
   // Calidad gráfica de tres niveles: 'low' | 'medium' | 'high'.
   // Todos los componentes reactivos escuchan esta transición en tiempo real.
   graphicsMode: 'high',

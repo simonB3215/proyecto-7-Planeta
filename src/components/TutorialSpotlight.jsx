@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useId } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Gauge, Zap, Sparkles } from 'lucide-react';
+import {
+  Gauge, Zap, Sparkles, Move, Search, Filter, Sun, RotateCw, HelpCircle, MousePointerClick,
+} from 'lucide-react';
 import { useAppStore, TUTORIAL_STEPS } from '../store/useAppStore';
 import { useStore } from '../store/useStore';
 import { GRAPHICS_LEVELS, GRAPHICS_PROFILES } from '../utils/graphics';
@@ -11,30 +13,16 @@ const LEVEL_ICON = { low: Gauge, medium: Zap, high: Sparkles };
 const SPOTLIGHT_PADDING = 12; // margen alrededor del elemento resaltado
 const SPOTLIGHT_RADIUS = 16; // esquinas redondeadas del recorte
 
-// Iconos minimalistas por paso (SVG inline, sin dependencias extra).
+// Icono lucide por paso del tutorial (el paso 0 / compuerta usa su propio diseño).
 const STEP_ICONS = {
-  welcome: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </svg>
-  ),
-  globe: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-      <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z" />
-      <path d="M9 9l6 6M15 9l-6 6" />
-    </svg>
-  ),
-  filters: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-      <path d="M4 6h16M7 12h10M10 18h4" />
-    </svg>
-  ),
-  details: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-      <path d="M3 11l19-9-9 19-2-8-8-2z" />
-    </svg>
-  ),
+  navigation: <Move className="w-7 h-7" strokeWidth={1.5} />,
+  panel: <Search className="w-7 h-7" strokeWidth={1.5} />,
+  filters: <Filter className="w-7 h-7" strokeWidth={1.5} />,
+  lighting: <Sun className="w-7 h-7" strokeWidth={1.5} />,
+  rotation: <RotateCw className="w-7 h-7" strokeWidth={1.5} />,
+  quality: <Sparkles className="w-7 h-7" strokeWidth={1.5} />,
+  help: <HelpCircle className="w-7 h-7" strokeWidth={1.5} />,
+  details: <MousePointerClick className="w-7 h-7" strokeWidth={1.5} />,
 };
 
 /**
@@ -44,6 +32,7 @@ export function HelpButton() {
   const startTutorial = useAppStore((s) => s.startTutorial);
   return (
     <motion.button
+      data-tutorial="help"
       onClick={startTutorial}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.92 }}

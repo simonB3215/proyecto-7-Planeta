@@ -30,8 +30,6 @@ function App() {
   // al deseleccionar haciendo clic en el vacío espacial.
   const canvasPointerDown = useRef({ x: 0, y: 0 });
   const isRotating = useStore(state => state.isRotating);
-  const radarMode = useStore(state => state.radarMode);
-  const toggleRadarMode = useStore(state => state.toggleRadarMode);
   const graphicsMode = useStore(state => state.graphicsMode);
   const cycleGraphicsMode = useStore(state => state.cycleGraphicsMode);
   const gfx = getGraphicsProfile(graphicsMode);
@@ -264,6 +262,7 @@ function App() {
         <div className="absolute bottom-6 right-6 z-30 pointer-events-auto flex gap-3">
           {/* Selector cíclico de calidad gráfica (HUD aeroespacial monocromático) */}
           <button
+            data-tutorial="quality"
             onClick={cycleGraphicsMode}
             className="group relative w-12 h-12 rounded-sm flex items-center justify-center bg-black/80 border border-white/15 text-neutral-300 hover:border-cyan-400 hover:text-cyan-300 transition-colors shadow-lg"
           >
@@ -279,20 +278,8 @@ function App() {
 
           <HelpButton />
 
-          <button 
-            onClick={toggleRadarMode}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-2xl border ${radarMode ? 'bg-emerald-500/80 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-emerald-500 hover:text-white'}`}
-            title={radarMode ? "Desactivar Radar" : "Activar Radar"}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <circle cx="12" cy="12" r="6"></circle>
-              <circle cx="12" cy="12" r="2"></circle>
-              <line x1="12" y1="12" x2="19.07" y2="4.93"></line>
-            </svg>
-          </button>
-          
-          <button 
+          <button
+            data-tutorial="lighting"
             onClick={toggleLighting}
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-2xl border ${lightingMode === 'full' ? 'bg-yellow-500/80 border-yellow-400 text-white shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-yellow-500 hover:text-white'}`}
             title={lightingMode === 'full' ? "Luz Tiempo Real" : "Iluminación Total"}
@@ -304,7 +291,8 @@ function App() {
             )}
           </button>
           
-          <button 
+          <button
+            data-tutorial="rotation"
             onClick={toggleRotation}
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-2xl border ${isRotating ? 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-orange-500 hover:text-white' : 'bg-orange-500/80 border-orange-400 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)]'}`}
             title={isRotating ? "Pausar Rotación" : "Reanudar Rotación"}
