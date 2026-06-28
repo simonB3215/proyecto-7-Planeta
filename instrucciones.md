@@ -1,19 +1,17 @@
-Actúa como un Ingeniero de Software Principal experto en React Three Fiber (R3F) y UX. Necesito implementar una funcionalidad de "Click Away" (Deselección) en mi aplicación "EarthPulse 3D" para mejorar la navegación del usuario.
+Actúa como un Diseñador de Interfaces Senior y Arquitecto de Sistemas de Misión Crítica. Necesito refactorizar el sistema de onboarding de la aplicación para introducir una compuerta de configuración gráfica obligatoria justo al iniciar el tutorial interactivo por primera vez.
 
-REQUERIMIENTO PRINCIPAL:
-El usuario debe poder cerrar o limpiar un evento seleccionado (almacenado en el estado de Zustand) simplemente haciendo clic fuera de los marcadores, ya sea en el espacio vacío del fondo o sobre la superficie del planeta (océano o tierra firme).
+Por favor, analiza la estructura de los archivos de mi entorno y ejecuta la refactorización siguiendo estas directrices lógicas de comportamiento:
 
-PLAN DE IMPLEMENTACIÓN:
+1. Transformación del Paso Inicial del Tutorial:
+Modifica el archivo encargado del tutorial interactivo para que el primer paso actúe como un panel de configuración forzado. En lugar de mostrar solo un texto de bienvenida, este panel debe presentar al usuario dos opciones claras de visualización técnica: Modo de Alto Rendimiento o Modo de Máxima Calidad.
 
-1. Modificación en 'App.jsx' (Detección de Vacío Espacial):
-- Localiza el componente principal del lienzo 3D.
-- Implementa el manejador de eventos nativo de R3F diseñado para interceptar los clics que no impactan en ninguna malla 3D (clics perdidos o "missed").
-- Cuando este evento ocurra, invoca la acción del store global (Zustand) correspondiente para anular (setear a null) el evento seleccionado actualmente.
+2. Bloqueo Estricto y Opacidad de Fondo:
+Asegúrate de que mientras el usuario se encuentre en este primer paso de selección, toda la pantalla permanezca cubierta por un fondo oscuro, denso y opaco de manera uniforme. Elimina o deshabilita los controles de navegación del tutorial, como los botones de avanzar o de omitir la guía. El sistema debe impedir cualquier tipo de navegación por el planeta o por la interfaz hasta que se haya elegido un perfil gráfico.
 
-2. Modificación en 'Globe.jsx' (Detección de Superficie del Planeta):
-- Localiza el manejador de eventos que se dispara al soltar el clic sobre la malla principal de la esfera terrestre.
-- Identifica la validación matemática existente que discrimina si el usuario hizo un clic intencional o si estaba arrastrando la cámara (comprobación de deltas X e Y).
-- Inmediatamente después de confirmar que fue un clic real y no un arrastre, inyecta la invocación al store global para anular el evento seleccionado.
-- Es crucial que esta nueva instrucción se ejecute en paralelo y NO bloquee ni modifique la lógica posterior que calcula el país seleccionado mediante GeoJSON.
+3. Enlace con el Almacén de Estado y Transición Fluida:
+Configura los botones de selección gráfica para que, al ser presionados por el operario, guarden la configuración elegida de forma directa en el almacenamiento de estados global de la aplicación. Inmediatamente después de guardar el perfil gráfico en la memoria del sistema, la interfaz del tutorial debe desbloquearse y hacer una transición automática hacia el segundo paso de la guía (la explicación de los controles de navegación orbital del planeta).
 
-Analiza la arquitectura actual de mis archivos 'App.jsx' y 'Globe.jsx' en el entorno, y devuélveme el código actualizado aplicando estrictamente esta lógica de deselección.
+4. Cohesión de Estilo HUD:
+Diseña la caja de diálogo de este selector manteniendo la estética aeroespacial del proyecto: bordes completamente rectos, contorno fino de alta visibilidad sobre fondo negro opaco, y tipografía puramente monoespaciada en mayúsculas con espaciado expandido para los títulos de las modalidades gráficas y las descripciones técnicas de cada modo.
+
+Genera la refactorización de los componentes del tutorial y la interfaz global respetando este orden de ejecución lógica y asegurando la consistencia con el estado general de la aplicación.

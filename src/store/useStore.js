@@ -46,5 +46,13 @@ export const useStore = create((set) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
   
   radarMode: false,
-  toggleRadarMode: () => set((state) => ({ radarMode: !state.radarMode }))
+  toggleRadarMode: () => set((state) => ({ radarMode: !state.radarMode })),
+
+  // Modo de calidad gráfica: 'quality' (cinematográfico) | 'performance' (optimizado).
+  // Todos los componentes reactivos escuchan esta transición en tiempo real.
+  graphicsMode: 'quality',
+  toggleGraphicsMode: () => set((state) => ({
+    graphicsMode: state.graphicsMode === 'quality' ? 'performance' : 'quality'
+  })),
+  setGraphicsMode: (mode) => set({ graphicsMode: mode }),
 }));

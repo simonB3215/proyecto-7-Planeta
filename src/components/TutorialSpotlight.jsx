@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useId } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Gauge, Sparkles } from 'lucide-react';
 import { useAppStore, TUTORIAL_STEPS } from '../store/useAppStore';
+import { useStore } from '../store/useStore';
 
 const SPOTLIGHT_PADDING = 12; // margen alrededor del elemento resaltado
 const SPOTLIGHT_RADIUS = 16; // esquinas redondeadas del recorte
@@ -111,10 +113,20 @@ export default function TutorialSpotlight() {
   const nextStep = useAppStore((s) => s.nextStep);
   const prevStep = useAppStore((s) => s.prevStep);
   const skipTutorial = useAppStore((s) => s.skipTutorial);
+  const setGraphicsMode = useStore((s) => s.setGraphicsMode);
 
   const maskId = useId();
   const current = TUTORIAL_STEPS[step];
   const rect = useTargetRect(current?.target, isOpen);
+
+  // Paso 0 = compuerta de configuración gráfica obligatoria (sin navegación).
+  const isGate = step === 0;
+
+  // Guarda el perfil gráfico y desbloquea avanzando al paso 2 (controles).
+  const handleSelectGraphics = (mode) => {
+    setGraphicsMode(mode);
+    nextStep();
+  };
 
   // Auto-activación en la primera visita.
   useEffect(() => {
@@ -161,7 +173,8 @@ export default function TutorialSpotlight() {
               y="0"
               width="100%"
               height="100%"
-              fill="rgba(0,0,0,0.8)"
+              // Compuerta: fondo denso y opaco uniforme (bloqueo total).
+              fill={isGate ? 'rgba(0,0,0,0.97)' : 'rgba(0,0,0,0.8)'}
               mask={`url(#${maskId})`}
             />
           </svg>
@@ -185,7 +198,7 @@ export default function TutorialSpotlight() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.92, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 280, damping: 26 }}
-              className="pointer-events-auto relative w-full max-w-md rounded-sm bg-black/80 backdrop-blur-sm border border-white/10 shadow-[0_0_40px_rgba(0,229,255,0.06)] p-8 text-neutral-100"
+              className={`pointer-events-auto relative w-full max-w-md rounded-none backdrop-blur-sm shadow-[0_0_40px_rgba(0,229,255,0.06)] p-8 text-neutral-100 border ${isGate ? 'bg-black/95 border-white/30' : 'bg-black/85 border-white/15'}`}
             >
               {/* Indicador de progreso */}
               <div className="flex items-center gap-2 mb-6">
@@ -199,53 +212,102 @@ export default function TutorialSpotlight() {
                 ))}
               </div>
 
-              {/* Contenido del paso (animado al cambiar) */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={current.id}
-                  initial={{ opacity: 0, x: 24 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -24 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <div className="w-14 h-14 rounded-xl bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 flex items-center justify-center mb-5">
-                    {STEP_ICONS[current.id]}
+              {isGate ? (
+                /* === COMPUERTA DE CONFIGURACIÓN GRÁFICA (bloqueo, sin navegación) === */
+                <div>
+                  <div className="font-mono text-[10px] tracking-widest text-cyan-400/80 uppercase mb-2">
+                    Configuración requerida
                   </div>
-                  <div className="text-xs font-mono tracking-widest text-cyan-400/80 uppercase mb-2">
-                    Paso {step + 1} / {total}
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3 tracking-tight">{current.title}</h3>
-                  <p className="text-slate-300 leading-relaxed">{current.body}</p>
-                </motion.div>
-              </AnimatePresence>
+                  <h3 className="font-mono text-lg tracking-widest uppercase mb-1">
+                    Bienvenido a EarthPulse 3D
+                  </h3>
+                  <p className="font-mono text-[10px] tracking-widest uppercase text-neutral-500 mb-6">
+                    Seleccione un perfil gráfico para iniciar
+                  </p>
 
-              {/* Controles */}
-              <div className="flex items-center justify-between mt-8">
-                <button
-                  onClick={skipTutorial}
-                  className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
-                >
-                  Omitir
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {step > 0 && (
+                  <div className="grid grid-cols-1 gap-3">
                     <button
-                      onClick={prevStep}
-                      className="px-4 py-2 rounded-lg text-sm border border-white/10 text-slate-300 hover:bg-white/5 transition-colors"
+                      onClick={() => handleSelectGraphics('performance')}
+                      className="group/opt text-left flex items-start gap-3 p-4 rounded-none bg-black/60 border border-white/25 hover:border-cyan-400 hover:bg-white/5 transition-colors"
                     >
-                      Atrás
+                      <Gauge size={22} strokeWidth={1.5} className="shrink-0 mt-0.5 text-neutral-300 group-hover/opt:text-cyan-300" />
+                      <div>
+                        <div className="font-mono text-[12px] tracking-widest uppercase text-neutral-100">
+                          Modo Alto Rendimiento
+                        </div>
+                        <div className="font-mono text-[9px] tracking-widest uppercase text-neutral-500 mt-1 leading-relaxed">
+                          DPR estándar · sin MSAA · malla optimizada
+                        </div>
+                      </div>
                     </button>
-                  )}
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={nextStep}
-                    className="px-5 py-2 rounded-lg text-sm font-semibold bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-[0_0_20px_rgba(0,229,255,0.35)] transition-colors"
-                  >
-                    {isLast ? 'Comenzar' : 'Siguiente'}
-                  </motion.button>
+
+                    <button
+                      onClick={() => handleSelectGraphics('quality')}
+                      className="group/opt text-left flex items-start gap-3 p-4 rounded-none bg-black/60 border border-white/25 hover:border-cyan-400 hover:bg-white/5 transition-colors"
+                    >
+                      <Sparkles size={22} strokeWidth={1.5} className="shrink-0 mt-0.5 text-neutral-300 group-hover/opt:text-cyan-300" />
+                      <div>
+                        <div className="font-mono text-[12px] tracking-widest uppercase text-neutral-100">
+                          Modo Máxima Calidad
+                        </div>
+                        <div className="font-mono text-[9px] tracking-widest uppercase text-neutral-500 mt-1 leading-relaxed">
+                          DPR x2 · MSAA 8x · geometría HD
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Contenido del paso (animado al cambiar) */}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={current.id}
+                      initial={{ opacity: 0, x: 24 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -24 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      <div className="w-14 h-14 rounded-sm bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 flex items-center justify-center mb-5">
+                        {STEP_ICONS[current.id]}
+                      </div>
+                      <div className="text-xs font-mono tracking-widest text-cyan-400/80 uppercase mb-2">
+                        Paso {step + 1} / {total}
+                      </div>
+                      <h3 className="text-2xl font-bold mb-3 tracking-tight">{current.title}</h3>
+                      <p className="text-slate-300 leading-relaxed">{current.body}</p>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Controles */}
+                  <div className="flex items-center justify-between mt-8">
+                    <button
+                      onClick={skipTutorial}
+                      className="text-sm text-slate-400 hover:text-slate-200 transition-colors"
+                    >
+                      Omitir
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {step > 1 && (
+                        <button
+                          onClick={prevStep}
+                          className="px-4 py-2 rounded-sm text-sm border border-white/10 text-slate-300 hover:bg-white/5 transition-colors"
+                        >
+                          Atrás
+                        </button>
+                      )}
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={nextStep}
+                        className="px-5 py-2 rounded-sm text-sm font-semibold bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-[0_0_20px_rgba(0,229,255,0.35)] transition-colors"
+                      >
+                        {isLast ? 'Comenzar' : 'Siguiente'}
+                      </motion.button>
+                    </div>
+                  </div>
+                </>
+              )}
             </motion.div>
           </div>
         </motion.div>

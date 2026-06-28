@@ -53,6 +53,12 @@ function EventMarker({
   const isFire = eventData.type === EVENT_TYPES.FIRE;
   const isVolcano = eventData.type === EVENT_TYPES.VOLCANO;
 
+  // Densidad poligonal según calidad gráfica: HD liso vs. cálculo aligerado.
+  const hiQ = useStore((s) => s.graphicsMode === 'quality');
+  const sphereSeg = hiQ ? 64 : 24;
+  const ringSeg = hiQ ? 64 : 32;
+  const wireSeg = hiQ ? 16 : 8;
+
   // Orienta el anillo sísmico tangente a la superficie del globo (normal radial).
   const ringQuat = useMemo(() => {
     const dir = toVector3(position).clone().normalize();
@@ -117,7 +123,7 @@ function EventMarker({
     <group position={position}>
       {/* Malla de telemetría (wireframe fino — sin glow difuso) */}
       <mesh scale={1.7}>
-        <sphereGeometry args={[size, 12, 12]} />
+        <sphereGeometry args={[size, wireSeg, wireSeg]} />
         <meshBasicMaterial
           color={color}
           wireframe
@@ -130,7 +136,7 @@ function EventMarker({
 
       {/* Núcleo emisivo HD (color inyectado, esfera de 64 segmentos) */}
       <mesh onClick={handleClick} onPointerOver={handleOver} onPointerOut={handleOut}>
-        <sphereGeometry args={[size, 64, 64]} />
+        <sphereGeometry args={[size, sphereSeg, sphereSeg]} />
         <meshStandardMaterial
           ref={coreMatRef}
           color={color}
@@ -143,7 +149,7 @@ function EventMarker({
       {/* Núcleo interno incandescente para volcanes (coreColor inyectado) */}
       {isVolcano && (
         <mesh>
-          <sphereGeometry args={[size * 0.45, 64, 64]} />
+          <sphereGeometry args={[size * 0.45, sphereSeg, sphereSeg]} />
           <meshStandardMaterial
             color={coreColor}
             emissive={coreColor}
@@ -156,7 +162,7 @@ function EventMarker({
       {/* Onda sísmica expansiva: barrido de radar (AdditiveBlending) */}
       {isEarthquake && (
         <mesh ref={ringRef} quaternion={ringQuat}>
-          <ringGeometry args={[size * 1.6, size * 1.9, 64]} />
+          <ringGeometry args={[size * 1.6, size * 1.9, ringSeg]} />
           <meshBasicMaterial
             ref={ringMatRef}
             color={color}
@@ -172,7 +178,7 @@ function EventMarker({
 
       {(isHovered || isSelected) && (
         <Html zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="bg-black/80 backdrop-blur-sm border border-white/10 rounded-sm px-3 py-2 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none">
+          <div className="bg-black/90 border border-white/25 rounded-none px-3 py-2 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none">
             <div className="flex items-center gap-2 mb-1.5">
               <TypeIcon size={14} strokeWidth={1.5} style={{ color }} />
               <span className="font-mono text-[10px] tracking-widest uppercase" style={{ color }}>

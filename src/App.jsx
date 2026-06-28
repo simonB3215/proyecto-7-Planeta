@@ -10,6 +10,7 @@ import CountryPanel from './components/CountryPanel';
 import CategoryFilters from './components/CategoryFilters';
 import TutorialSpotlight, { HelpButton } from './components/TutorialSpotlight';
 import { NotificationToaster } from './components/Notifications';
+import { Gauge, Sparkles } from 'lucide-react';
 
 function getEventStyles() {
   return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
@@ -29,6 +30,9 @@ function App() {
   const isRotating = useStore(state => state.isRotating);
   const radarMode = useStore(state => state.radarMode);
   const toggleRadarMode = useStore(state => state.toggleRadarMode);
+  const graphicsMode = useStore(state => state.graphicsMode);
+  const toggleGraphicsMode = useStore(state => state.toggleGraphicsMode);
+  const isQuality = graphicsMode === 'quality';
   const toggleRotation = useStore(state => state.toggleRotation);
   const lightingMode = useStore(state => state.lightingMode);
   const toggleLighting = useStore(state => state.toggleLighting);
@@ -52,7 +56,8 @@ function App() {
         onPointerDown={(e) => { canvasPointerDown.current = { x: e.clientX, y: e.clientY }; }}
       >
         <Canvas
-          dpr={[1, 2]}
+          // Calidad: rango completo de píxeles del dispositivo. Rendimiento: DPR estándar.
+          dpr={isQuality ? [1, 2] : 1}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           camera={{ position: [0, 0, 2.8], fov: 45, near: 0.1, far: 1000 }}
           // Click Away: clic (no arrastre) en el vacío espacial -> deselección total.
@@ -67,11 +72,12 @@ function App() {
             <Globe />
             {/* Post-procesamiento técnico: Bloom nítido tipo LED/láser (umbral alto,
                 poca difusión) que solo afecta a los marcadores emisivos, no a la Tierra. */}
-            <EffectComposer multisampling={8} disableNormalPass>
+            {/* Calidad: MSAA 8x + bloom pleno. Rendimiento: sin MSAA + bloom atenuado. */}
+            <EffectComposer multisampling={isQuality ? 8 : 0} disableNormalPass>
               <Bloom
                 luminanceThreshold={1.1}
                 luminanceSmoothing={0.2}
-                intensity={0.7}
+                intensity={isQuality ? 0.7 : 0.4}
                 radius={0.4}
                 mipmapBlur
               />
@@ -243,6 +249,19 @@ function App() {
 
         {/* Global Controls */}
         <div className="absolute bottom-6 right-6 z-30 pointer-events-auto flex gap-3">
+          {/* Selector de calidad gráfica (HUD aeroespacial monocromático) */}
+          <button
+            onClick={toggleGraphicsMode}
+            className="group relative w-12 h-12 rounded-sm flex items-center justify-center bg-black/80 border border-white/15 text-neutral-300 hover:border-cyan-400 hover:text-cyan-300 transition-colors shadow-lg"
+          >
+            {isQuality
+              ? <Sparkles size={20} strokeWidth={1.5} />
+              : <Gauge size={20} strokeWidth={1.5} />}
+            <span className="pointer-events-none absolute bottom-full right-0 mb-2 px-2 py-1 bg-black/90 border border-white/20 rounded-none whitespace-nowrap font-mono text-[9px] tracking-widest uppercase text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity">
+              {isQuality ? 'Máxima telemetría visual' : 'Optimización de hardware'}
+            </span>
+          </button>
+
           <HelpButton />
 
           <button 

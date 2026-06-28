@@ -51,6 +51,7 @@ function ClusterMarker({ cluster }) {
   );
   const [isHovered, setIsHovered] = useState(false);
   const coreMaterialRef = useRef();
+  const clusterSeg = useStore((s) => (s.graphicsMode === 'quality' ? 32 : 16));
 
   // Config (color, intensidad, núcleo) inyectada desde la paleta externa.
   const cfg = getPaletteFor(cluster.type);
@@ -118,7 +119,7 @@ function ClusterMarker({ cluster }) {
   return (
     <group position={pos}>
       <mesh onClick={handleClick} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
-        <sphereGeometry args={[0.02 + count * 0.001, 18, 18]} />
+        <sphereGeometry args={[0.02 + count * 0.001, clusterSeg, clusterSeg]} />
         <meshStandardMaterial
           ref={coreMaterialRef}
           color={clusterColor}
@@ -130,7 +131,7 @@ function ClusterMarker({ cluster }) {
 
       {(isHovered || isSelected) && (
         <Html zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="bg-black/80 backdrop-blur-sm border border-white/10 rounded-sm px-3 py-2 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none">
+          <div className="bg-black/90 border border-white/25 rounded-none px-3 py-2 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none">
             <div className="flex items-center gap-2">
               <Layers size={14} strokeWidth={1.5} style={{ color: clusterColor }} />
               <span className="font-mono text-[10px] tracking-widest uppercase text-neutral-300">

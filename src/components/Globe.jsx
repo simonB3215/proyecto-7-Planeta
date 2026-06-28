@@ -7,6 +7,7 @@ import CameraController from './CameraController';
 import { geoContains } from 'd3-geo';
 import CountryBorders from './CountryBorders';
 import SelectedCountryHighlight from './SelectedCountryHighlight';
+import Atmosphere from './Atmosphere';
 import { useStore } from '../store/useStore';
 
 export default function Globe() {
@@ -19,6 +20,10 @@ export default function Globe() {
   const isRotating = useStore(state => state.isRotating);
   const lightingMode = useStore(state => state.lightingMode);
   const geoJsonData = useStore(state => state.geoJsonData);
+  const graphicsMode = useStore(state => state.graphicsMode);
+
+  // Subdivisiones de las esferas según calidad: liso HD vs. cálculo aligerado.
+  const sphereSegments = graphicsMode === 'quality' ? 64 : 32;
   const lastMoveTimeRef = useRef(0);
 
   // Calcular la posición del sol en tiempo real (basado en UTC)
@@ -45,6 +50,15 @@ export default function Globe() {
     // Recalcular solo al cambiar el modo de iluminación (refresca la posición del sol).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightingMode]);
+
+  // Dirección al Sol (world-space, normalizada) que alimenta la atmósfera dinámica.
+  // En tiempo real usa la posición solar calculada; en modo "full", la luz fija.
+  const sunDirection = useMemo(() => {
+    const v = lightingMode === 'realtime'
+      ? new THREE.Vector3(sunPosition[0], sunPosition[1], sunPosition[2])
+      : new THREE.Vector3(10, 10, 10);
+    return v.normalize();
+  }, [lightingMode, sunPosition]);
   
   // Generar textura fotorealista del Sol por código (sin descargar imágenes extra)
   const sunTexture = useMemo(() => {
@@ -99,19 +113,24 @@ export default function Globe() {
     const dy = Math.abs(e.clientY - pointerDownRef.current.y);
     if (dx > 3 || dy > 3) return; // Fue un drag (rotación)
 
-    // Click Away: clic real sobre la superficie -> deselección total de base
-    // (evento + país). NO bloquea el cálculo de país que viene a continuación.
-    useStore.getState().clearSelection();
+    // Click Away: clic real sobre la superficie -> limpia SIEMPRE el evento.
+    useStore.getState().clearSelectedEvent();
 
-    // Si el clic cae dentro de un país, lo seleccionamos (resaltado completo).
-    // Si cae en océano (sin feature), queda todo deseleccionado.
-    if (!geoJsonData || !geoJsonData.features) return;
+    // País bajo el cursor: si el punto cae dentro de un polígono -> seleccionarlo
+    // (resaltado completo). Si cae en el océano (sin feature) -> limpiar también el
+    // país para cerrar el panel lateral. No bloquea ninguna lógica posterior.
+    if (!geoJsonData || !geoJsonData.features) {
+      useStore.getState().clearSelectedCountry();
+      return;
+    }
     let lat = (e.uv.y - 0.5) * 180;
     let lng = (e.uv.x - 0.5) * 360;
     const feature = geoJsonData.features.find(f => geoContains(f, [lng, lat]));
 
     if (feature && feature.properties.name) {
       useStore.getState().setSelectedCountry(feature.properties.name);
+    } else {
+      useStore.getState().clearSelectedCountry();
     }
   };
 
@@ -151,8 +170,9 @@ export default function Globe() {
 
   return (
     <>
-      {/* Luz ambiental mínima: alto contraste, lado oscuro de la Tierra casi negro */}
-      <ambientLight intensity={lightingMode === 'full' ? 0.22 : 0.02} />
+      {/* Luz ambiental mínima: cara oculta completamente oscura (alto contraste y
+          menos cálculo lumínico sobre fragmentos no iluminados) */}
+      <ambientLight intensity={lightingMode === 'full' ? 0.1 : 0.02} />
 
       {/* Luz direccional intensa para un día nítido (no rota con la Tierra) */}
       {lightingMode === 'full' && (
@@ -176,7 +196,7 @@ export default function Globe() {
       
       <group ref={globeRef} position={[0, 0, 0]}>
         <mesh onPointerMove={handlePointerMove} onPointerOut={handlePointerOut} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
-          <sphereGeometry args={[1, 64, 64]} />
+          <sphereGeometry args={[1, sphereSegments, sphereSegments]} />
           <meshStandardMaterial 
             map={colorMap}
             normalMap={bumpMap}
@@ -246,16 +266,8 @@ export default function Globe() {
           </Billboard>
         )}
 
-        {/* Halo Atmosférico ultradelgado y tenue */}
-        <mesh raycast={() => null}>
-          <sphereGeometry args={[1.005, 64, 64]} />
-          <meshBasicMaterial
-            color="#4ea8ff"
-            transparent={true}
-            opacity={0.08}
-            side={THREE.BackSide}
-          />
-        </mesh>
+        {/* Atmósfera dinámica (shader Fresnel + día/noche, reacciona al Sol y cámara) */}
+        <Atmosphere sunDirection={sunDirection} segments={sphereSegments} />
         
         {/* Marcadores de Eventos */}
         <Markers />
