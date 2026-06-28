@@ -34,6 +34,8 @@ export const useStore = create((set) => ({
   clearSelectedEvent: () => set({ selectedEvent: null }),
   setSelectedCountry: (countryName) => set({ selectedCountry: countryName }),
   clearSelectedCountry: () => set({ selectedCountry: null }),
+  // Deselección total: limpia evento Y país (cierra panel y quita el resaltado).
+  clearSelection: () => set({ selectedEvent: null, selectedCountry: null }),
   toggleRotation: () => set((state) => ({ isRotating: !state.isRotating })),
   toggleLighting: () => set((state) => ({ lightingMode: state.lightingMode === 'full' ? 'realtime' : 'full' })),
   

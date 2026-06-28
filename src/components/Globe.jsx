@@ -6,6 +6,7 @@ import Markers from './Markers';
 import CameraController from './CameraController';
 import { geoContains } from 'd3-geo';
 import CountryBorders from './CountryBorders';
+import SelectedCountryHighlight from './SelectedCountryHighlight';
 import { useStore } from '../store/useStore';
 
 export default function Globe() {
@@ -91,13 +92,20 @@ export default function Globe() {
 
   const handlePointerUp = (e) => {
     e.stopPropagation();
-    if (!e.uv || !geoJsonData || !geoJsonData.features) return;
+    if (!e.uv) return; // necesitamos coordenadas UV sobre la esfera
 
-    // Diferenciar arrastre de clic
+    // Diferenciar arrastre (rotación de cámara) de un clic intencional
     const dx = Math.abs(e.clientX - pointerDownRef.current.x);
     const dy = Math.abs(e.clientY - pointerDownRef.current.y);
     if (dx > 3 || dy > 3) return; // Fue un drag (rotación)
 
+    // Click Away: clic real sobre la superficie -> deselección total de base
+    // (evento + país). NO bloquea el cálculo de país que viene a continuación.
+    useStore.getState().clearSelection();
+
+    // Si el clic cae dentro de un país, lo seleccionamos (resaltado completo).
+    // Si cae en océano (sin feature), queda todo deseleccionado.
+    if (!geoJsonData || !geoJsonData.features) return;
     let lat = (e.uv.y - 0.5) * 180;
     let lng = (e.uv.x - 0.5) * 360;
     const feature = geoJsonData.features.find(f => geoContains(f, [lng, lat]));
@@ -215,6 +223,9 @@ export default function Globe() {
 
         {/* Fronteras del mundo (Mesh de Líneas) */}
         <CountryBorders />
+
+        {/* Resaltado del país seleccionado (contorno completo con glow) */}
+        <SelectedCountryHighlight />
 
         {/* País Seleccionado (3D Text) */}
         {hoveredCountry && (

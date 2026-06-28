@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import Globe from './components/Globe';
@@ -21,6 +21,11 @@ function App() {
   const eonetEvents = useStore(state => state.eonetEvents);
   const selectedEvent = useStore(state => state.selectedEvent);
   const setSelectedEvent = useStore(state => state.setSelectedEvent);
+  const clearSelection = useStore(state => state.clearSelection);
+
+  // Posición del pointerdown sobre el lienzo, para distinguir clic de arrastre
+  // al deseleccionar haciendo clic en el vacío espacial.
+  const canvasPointerDown = useRef({ x: 0, y: 0 });
   const isRotating = useStore(state => state.isRotating);
   const radarMode = useStore(state => state.radarMode);
   const toggleRadarMode = useStore(state => state.toggleRadarMode);
@@ -41,11 +46,22 @@ function App() {
     <div className="w-full h-screen bg-black text-neutral-200 overflow-hidden relative isolate">
       
       {/* 3D Canvas Layer — fijo a pantalla completa, detrás de la UI (sin scrollbars) */}
-      <div data-tutorial="canvas" className="fixed inset-0 w-full h-full -z-10">
+      <div
+        data-tutorial="canvas"
+        className="fixed inset-0 w-full h-full -z-10"
+        onPointerDown={(e) => { canvasPointerDown.current = { x: e.clientX, y: e.clientY }; }}
+      >
         <Canvas
           dpr={[1, 2]}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           camera={{ position: [0, 0, 2.8], fov: 45, near: 0.1, far: 1000 }}
+          // Click Away: clic (no arrastre) en el vacío espacial -> deselección total.
+          onPointerMissed={(e) => {
+            const dx = Math.abs(e.clientX - canvasPointerDown.current.x);
+            const dy = Math.abs(e.clientY - canvasPointerDown.current.y);
+            if (dx > 3 || dy > 3) return; // fue un arrastre (rotación), no deseleccionar
+            clearSelection();
+          }}
         >
           <Suspense fallback={null}>
             <Globe />
