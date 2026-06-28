@@ -1,17 +1,23 @@
-Actúa como un Diseñador de Interfaces Senior y Arquitecto de Sistemas de Misión Crítica. Necesito refactorizar el sistema de onboarding de la aplicación para introducir una compuerta de configuración gráfica obligatoria justo al iniciar el tutorial interactivo por primera vez.
+Actúa como un Arquitecto de Sistemas de Misión Crítica y Experto en Optimización de Gráficos 3D. Necesito refactorizar el sistema de rendimiento de la aplicación para implementar un selector de calidad gráfica de tres niveles (Baja, Media y Alta), garantizando que la aplicación sea accesible en hardware limitado y deslumbrante en pantallas de alta definición.
 
-Por favor, analiza la estructura de los archivos de mi entorno y ejecuta la refactorización siguiendo estas directrices lógicas de comportamiento:
+Por favor, analiza la arquitectura de mi proyecto y ejecuta la refactorización siguiendo estrictamente estas directrices lógicas de comportamiento:
 
-1. Transformación del Paso Inicial del Tutorial:
-Modifica el archivo encargado del tutorial interactivo para que el primer paso actúe como un panel de configuración forzado. En lugar de mostrar solo un texto de bienvenida, este panel debe presentar al usuario dos opciones claras de visualización técnica: Modo de Alto Rendimiento o Modo de Máxima Calidad.
+1. Expansión del Estado Global:
+Actualiza el archivo encargado de la memoria y el estado central para soportar tres perfiles de calidad gráfica. Añade una función que permita establecer el nivel de forma directa desde la compuerta de inicio, y otra función que permita alternar cíclicamente entre los tres niveles desde los controles de la interfaz principal.
 
-2. Bloqueo Estricto y Opacidad de Fondo:
-Asegúrate de que mientras el usuario se encuentre en este primer paso de selección, toda la pantalla permanezca cubierta por un fondo oscuro, denso y opaco de manera uniforme. Elimina o deshabilita los controles de navegación del tutorial, como los botones de avanzar o de omitir la guía. El sistema debe impedir cualquier tipo de navegación por el planeta o por la interfaz hasta que se haya elegido un perfil gráfico.
+2. Compuerta Obligatoria de Tres Opciones:
+En el componente del tutorial de inicio, modifica el panel de configuración forzada para que presente tres opciones de selección técnica (Baja, Media y Alta). Mantén el fondo opaco y bloqueante que impide la interacción con el planeta. La aplicación solo debe guardar la preferencia y avanzar hacia la guía interactiva una vez que el usuario presione una de las tres alternativas.
 
-3. Enlace con el Almacén de Estado y Transición Fluida:
-Configura los botones de selección gráfica para que, al ser presionados por el operario, guarden la configuración elegida de forma directa en el almacenamiento de estados global de la aplicación. Inmediatamente después de guardar el perfil gráfico en la memoria del sistema, la interfaz del tutorial debe desbloquearse y hacer una transición automática hacia el segundo paso de la guía (la explicación de los controles de navegación orbital del planeta).
+3. Escalado Progresivo de Renderizado y Efectos:
+Refactoriza el lienzo principal y el compositor de efectos lumínicos para que interpreten los tres perfiles:
+- En calidad baja, restringe la densidad de pixeles a la resolución estándar y desactiva totalmente el suavizado de bordes en el post-procesamiento para salvar recursos.
+- En calidad media, permite una densidad de pixeles equilibrada y activa un nivel moderado de suavizado.
+- En calidad alta, habilita la densidad máxima nativa de la pantalla y el nivel más exigente de suavizado para eliminar cualquier diente de sierra.
 
-4. Cohesión de Estilo HUD:
-Diseña la caja de diálogo de este selector manteniendo la estética aeroespacial del proyecto: bordes completamente rectos, contorno fino de alta visibilidad sobre fondo negro opaco, y tipografía puramente monoespaciada en mayúsculas con espaciado expandido para los títulos de las modalidades gráficas y las descripciones técnicas de cada modo.
+4. Adaptación Geométrica del Planeta y la Telemetría:
+Modifica los componentes que renderizan la esfera terrestre y los marcadores de anomalías. Implementa una lógica que ajuste la cantidad de segmentos poligonales basándose en el estado gráfico. Aplica un número de subdivisiones muy bajo para el modo de rendimiento máximo (baja), un valor intermedio aceptable para el modo medio, y un valor altísimo para el modo de calidad superior, garantizando esferas completamente pulidas.
 
-Genera la refactorización de los componentes del tutorial y la interfaz global respetando este orden de ejecución lógica y asegurando la consistencia con el estado general de la aplicación.
+5. Interfaz HUD Aeroespacial:
+Asegúrate de que los tres botones en la pantalla de inicio obligatoria mantengan un diseño técnico y monocromático: bordes rectos milimétricos, fondo oscuro profundo y tipografía puramente monoespaciada en mayúsculas, conservando la identidad visual de un panel de telemetría de precisión.
+
+Genera las modificaciones necesarias distribuyendo esta lógica de manera modular entre el estado global, el lienzo de renderizado, las geometrías y el sistema de guía inicial.

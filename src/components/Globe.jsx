@@ -9,6 +9,7 @@ import CountryBorders from './CountryBorders';
 import SelectedCountryHighlight from './SelectedCountryHighlight';
 import Atmosphere from './Atmosphere';
 import { useStore } from '../store/useStore';
+import { getGraphicsProfile } from '../utils/graphics';
 
 export default function Globe() {
   const globeRef = useRef();
@@ -22,8 +23,8 @@ export default function Globe() {
   const geoJsonData = useStore(state => state.geoJsonData);
   const graphicsMode = useStore(state => state.graphicsMode);
 
-  // Subdivisiones de las esferas según calidad: liso HD vs. cálculo aligerado.
-  const sphereSegments = graphicsMode === 'quality' ? 64 : 32;
+  // Subdivisiones de las esferas según el perfil gráfico (baja/media/alta).
+  const sphereSegments = getGraphicsProfile(graphicsMode).earthSegments;
   const lastMoveTimeRef = useRef(0);
 
   // Calcular la posición del sol en tiempo real (basado en UTC)

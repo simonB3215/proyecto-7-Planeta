@@ -8,6 +8,7 @@ import { useFrame } from '@react-three/fiber';
 import { Layers } from 'lucide-react';
 import { EVENT_TYPES, getPaletteFor, eonetCategoryToType } from '../utils/palette';
 import { makeCountryPredicate } from '../utils/countryFilter';
+import { getGraphicsProfile } from '../utils/graphics';
 
 const GLOBE_RADIUS = 1.01;
 const CLUSTER_RADIUS_DEG = 8; // Grados de distancia para agrupar
@@ -51,7 +52,7 @@ function ClusterMarker({ cluster }) {
   );
   const [isHovered, setIsHovered] = useState(false);
   const coreMaterialRef = useRef();
-  const clusterSeg = useStore((s) => (s.graphicsMode === 'quality' ? 32 : 16));
+  const clusterSeg = getGraphicsProfile(useStore((s) => s.graphicsMode)).clusterSphere;
 
   // Config (color, intensidad, núcleo) inyectada desde la paleta externa.
   const cfg = getPaletteFor(cluster.type);

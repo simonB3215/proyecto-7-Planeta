@@ -1,8 +1,12 @@
 import { useEffect, useState, useCallback, useId } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Gauge, Sparkles } from 'lucide-react';
+import { Gauge, Zap, Sparkles } from 'lucide-react';
 import { useAppStore, TUTORIAL_STEPS } from '../store/useAppStore';
 import { useStore } from '../store/useStore';
+import { GRAPHICS_LEVELS, GRAPHICS_PROFILES } from '../utils/graphics';
+
+// Icono por nivel de calidad (monocromático).
+const LEVEL_ICON = { low: Gauge, medium: Zap, high: Sparkles };
 
 const SPOTLIGHT_PADDING = 12; // margen alrededor del elemento resaltado
 const SPOTLIGHT_RADIUS = 16; // esquinas redondeadas del recorte
@@ -226,36 +230,36 @@ export default function TutorialSpotlight() {
                   </p>
 
                   <div className="grid grid-cols-1 gap-3">
-                    <button
-                      onClick={() => handleSelectGraphics('performance')}
-                      className="group/opt text-left flex items-start gap-3 p-4 rounded-none bg-black/60 border border-white/25 hover:border-cyan-400 hover:bg-white/5 transition-colors"
-                    >
-                      <Gauge size={22} strokeWidth={1.5} className="shrink-0 mt-0.5 text-neutral-300 group-hover/opt:text-cyan-300" />
-                      <div>
-                        <div className="font-mono text-[12px] tracking-widest uppercase text-neutral-100">
-                          Modo Alto Rendimiento
-                        </div>
-                        <div className="font-mono text-[9px] tracking-widest uppercase text-neutral-500 mt-1 leading-relaxed">
-                          DPR estándar · sin MSAA · malla optimizada
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handleSelectGraphics('quality')}
-                      className="group/opt text-left flex items-start gap-3 p-4 rounded-none bg-black/60 border border-white/25 hover:border-cyan-400 hover:bg-white/5 transition-colors"
-                    >
-                      <Sparkles size={22} strokeWidth={1.5} className="shrink-0 mt-0.5 text-neutral-300 group-hover/opt:text-cyan-300" />
-                      <div>
-                        <div className="font-mono text-[12px] tracking-widest uppercase text-neutral-100">
-                          Modo Máxima Calidad
-                        </div>
-                        <div className="font-mono text-[9px] tracking-widest uppercase text-neutral-500 mt-1 leading-relaxed">
-                          DPR x2 · MSAA 8x · geometría HD
-                        </div>
-                      </div>
-                    </button>
+                    {GRAPHICS_LEVELS.map((lvl) => {
+                      const p = GRAPHICS_PROFILES[lvl];
+                      const Icon = LEVEL_ICON[lvl];
+                      return (
+                        <button
+                          key={lvl}
+                          onClick={() => handleSelectGraphics(lvl)}
+                          className="group/opt text-left flex items-start gap-3 p-4 rounded-none bg-black/60 border border-white/25 hover:border-cyan-400 hover:bg-white/5 transition-colors"
+                        >
+                          <Icon size={22} strokeWidth={1.5} className="shrink-0 mt-0.5 text-neutral-300 group-hover/opt:text-cyan-300" />
+                          <div>
+                            <div className="font-mono text-[12px] tracking-widest uppercase text-neutral-100">
+                              Calidad {p.label}
+                            </div>
+                            <div className="font-mono text-[9px] tracking-widest uppercase text-neutral-500 mt-1 leading-relaxed">
+                              {p.desc}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
+
+                  {/* Omitir: cierra el onboarding manteniendo el perfil gráfico por defecto */}
+                  <button
+                    onClick={skipTutorial}
+                    className="mt-5 w-full text-center font-mono text-[9px] tracking-widest uppercase text-neutral-500 hover:text-neutral-300 transition-colors"
+                  >
+                    Omitir tutorial
+                  </button>
                 </div>
               ) : (
                 <>

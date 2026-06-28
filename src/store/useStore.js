@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { nextGraphicsLevel } from '../utils/graphics';
 
 export const useStore = create((set) => ({
   earthquakes: [],
@@ -48,11 +49,11 @@ export const useStore = create((set) => ({
   radarMode: false,
   toggleRadarMode: () => set((state) => ({ radarMode: !state.radarMode })),
 
-  // Modo de calidad gráfica: 'quality' (cinematográfico) | 'performance' (optimizado).
+  // Calidad gráfica de tres niveles: 'low' | 'medium' | 'high'.
   // Todos los componentes reactivos escuchan esta transición en tiempo real.
-  graphicsMode: 'quality',
-  toggleGraphicsMode: () => set((state) => ({
-    graphicsMode: state.graphicsMode === 'quality' ? 'performance' : 'quality'
-  })),
+  graphicsMode: 'high',
+  // Set directo (desde la compuerta de inicio).
   setGraphicsMode: (mode) => set({ graphicsMode: mode }),
+  // Ciclo low -> medium -> high -> low (desde los controles de la UI).
+  cycleGraphicsMode: () => set((state) => ({ graphicsMode: nextGraphicsLevel(state.graphicsMode) })),
 }));

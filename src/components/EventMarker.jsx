@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { Flame, Mountain, Activity } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { EVENT_TYPES } from '../utils/palette';
+import { getGraphicsProfile } from '../utils/graphics';
 
 const UP_Z = new THREE.Vector3(0, 0, 1);
 
@@ -53,11 +54,11 @@ function EventMarker({
   const isFire = eventData.type === EVENT_TYPES.FIRE;
   const isVolcano = eventData.type === EVENT_TYPES.VOLCANO;
 
-  // Densidad poligonal según calidad gráfica: HD liso vs. cálculo aligerado.
-  const hiQ = useStore((s) => s.graphicsMode === 'quality');
-  const sphereSeg = hiQ ? 64 : 24;
-  const ringSeg = hiQ ? 64 : 32;
-  const wireSeg = hiQ ? 16 : 8;
+  // Densidad poligonal según el perfil gráfico (baja/media/alta).
+  const gfx = getGraphicsProfile(useStore((s) => s.graphicsMode));
+  const sphereSeg = gfx.markerSphere;
+  const ringSeg = gfx.markerRing;
+  const wireSeg = gfx.markerWire;
 
   // Orienta el anillo sísmico tangente a la superficie del globo (normal radial).
   const ringQuat = useMemo(() => {
