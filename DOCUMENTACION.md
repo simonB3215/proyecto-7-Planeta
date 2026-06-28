@@ -108,6 +108,7 @@ src/
 └── utils/
     ├── geoToVector3.js      # Conversión lat/lng → Vector3 sobre la esfera
     ├── palette.js           # Paleta "Cyber-Scientific" (fuente única de verdad)
+    ├── countryFilter.js     # Filtrado geográfico estricto por país (globo + panel)
     └── notify.jsx           # Helper de alertas: notify.error/warning/info/success
 ```
 

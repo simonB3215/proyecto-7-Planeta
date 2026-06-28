@@ -7,6 +7,7 @@ import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { Layers } from 'lucide-react';
 import { EVENT_TYPES, getPaletteFor, eonetCategoryToType } from '../utils/palette';
+import { makeCountryPredicate } from '../utils/countryFilter';
 
 const GLOBE_RADIUS = 1.01;
 const CLUSTER_RADIUS_DEG = 8; // Grados de distancia para agrupar
@@ -154,7 +155,16 @@ export default function Markers() {
   const eonetEvents = useStore((s) => s.eonetEvents);
   const firmsFires = useStore((s) => s.firmsFires);
   const timelineDate = useStore((s) => s.timelineDate);
+  const selectedCountry = useStore((s) => s.selectedCountry);
+  const geoJsonData = useStore((s) => s.geoJsonData);
   const filters = useAppStore((s) => s.filters);
+
+  // Predicado de filtrado geográfico estricto por país. `null` = sin filtro
+  // (no hay país real seleccionado) → se muestran todos los eventos.
+  const countryPredicate = useMemo(
+    () => makeCountryPredicate(selectedCountry, geoJsonData),
+    [selectedCountry, geoJsonData]
+  );
 
   // EARTHQUAKES (USGS)
   const eqClusters = useMemo(() => {
@@ -180,9 +190,10 @@ export default function Markers() {
             rawLng: coords[0],
           },
         };
-      });
+      })
+      .filter((e) => !countryPredicate || countryPredicate(e.lng, e.lat));
     return clusterEvents(validEvents, CLUSTER_RADIUS_DEG);
-  }, [earthquakes, timelineDate]);
+  }, [earthquakes, timelineDate, countryPredicate]);
 
   // FIRES (NASA FIRMS)
   const fireClusters = useMemo(() => {
@@ -205,9 +216,10 @@ export default function Markers() {
           rawLat: parseFloat(fire.latitude),
           rawLng: parseFloat(fire.longitude),
         },
-      }));
+      }))
+      .filter((e) => !countryPredicate || countryPredicate(e.lng, e.lat));
     return clusterEvents(validEvents, CLUSTER_RADIUS_DEG);
-  }, [firmsFires, timelineDate]);
+  }, [firmsFires, timelineDate, countryPredicate]);
 
   // VOLCANOES (NASA EONET) — pocos, sin clustering.
   const volcanoCfg = getPaletteFor(EVENT_TYPES.VOLCANO);
@@ -222,6 +234,9 @@ export default function Markers() {
 
         const eventTime = new Date(ev.geometries[0].date).getTime();
         if (eventTime > timelineDate) return null;
+
+        // Filtro geográfico estricto por país seleccionado.
+        if (countryPredicate && !countryPredicate(coords[0], coords[1])) return null;
 
         const pos = latLngToVector3(coords[1], coords[0], GLOBE_RADIUS);
         return (
@@ -246,7 +261,7 @@ export default function Markers() {
       })
       .filter(Boolean);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eonetEvents, timelineDate]);
+  }, [eonetEvents, timelineDate, countryPredicate]);
 
   // Filtros por categoría (controlados desde el panel lateral).
   const show = (type) => filters[type] !== false;

@@ -1,21 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Plus, Minus, X } from 'lucide-react';
+import { Plus, Minus, X, SearchX } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
-import { geoContains } from 'd3-geo';
+import { makeCountryPredicate } from '../utils/countryFilter';
 
 function getEventStyles() {
   return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
 }
-
-// Helpers para geolocalización de EE.UU.
-const isUS = (countryQuery) => countryQuery === "united states" || countryQuery === "usa";
-const checkUSBounds = (lng, lat) => {
-  const inContiguousUS = lat >= 24 && lat <= 50 && lng >= -125 && lng <= -65;
-  const inAlaska = lat >= 51 && lat <= 72 && lng >= -180 && lng <= -130;
-  const inHawaii = lat >= 18 && lat <= 23 && lng >= -161 && lng <= -154;
-  return inContiguousUS || inAlaska || inHawaii;
-};
 
 export default function CountryPanel() {
   const selectedCountry = useStore(state => state.selectedCountry);
@@ -31,58 +22,42 @@ export default function CountryPanel() {
 
   const countryEvents = useMemo(() => {
     if (!selectedCountry) return [];
-    
-    const countryQuery = selectedCountry.toLowerCase();
-    const countryFeature = geoJsonData?.features?.find(f => f.properties.name?.toLowerCase() === countryQuery);
 
-    // 1. Filtrar Terremotos
+    const query = selectedCountry.toLowerCase();
+    // Mismo predicado geográfico ESTRICTO que usa el globo (consistencia total).
+    // `null` = el texto no es un país real (p. ej. región/estado desde la lista):
+    // en ese caso usamos un fallback de texto, salvo incendios (no tienen texto).
+    const predicate = makeCountryPredicate(selectedCountry, geoJsonData);
+
+    // 1. Terremotos
     const countryEarthquakes = earthquakes.filter(eq => {
       if (new Date(eq.properties.time).getTime() > timelineDate) return false;
       const [lng, lat] = eq.geometry.coordinates;
-
-      if (countryFeature && geoContains(countryFeature, [lng, lat])) return true;
-
-      const place = eq.properties.place ? eq.properties.place.toLowerCase() : "";
-      if (place.includes(countryQuery)) return true;
-      if (isUS(countryQuery)) {
-        return checkUSBounds(lng, lat);
-      }
-      return false;
+      if (predicate) return predicate(lng, lat);
+      return (eq.properties.place || '').toLowerCase().includes(query);
     }).map(eq => ({ ...eq, eventType: 'Earthquake', sortDate: new Date(eq.properties.time).getTime() }));
 
-    // 2. Filtrar Volcanes (EONET)
+    // 2. Volcanes (EONET)
     const countryVolcanoes = eonetEvents.filter(ev => {
       if (!ev.geometries?.[0]) return false;
       if (new Date(ev.geometries[0].date).getTime() > timelineDate) return false;
-      
+
       let coords = ev.geometries[0].coordinates;
-      while(Array.isArray(coords[0])) coords = coords[0];
+      while (Array.isArray(coords[0])) coords = coords[0];
       const lng = coords[0];
       const lat = coords[1];
 
-      if (countryFeature && geoContains(countryFeature, [lng, lat])) return true;
-
-      const title = ev.title ? ev.title.toLowerCase() : "";
-      if (title.includes(countryQuery)) return true;
-      if (isUS(countryQuery)) {
-        return checkUSBounds(lng, lat);
-      }
-      return false;
+      if (predicate) return predicate(lng, lat);
+      return (ev.title || '').toLowerCase().includes(query);
     }).map(ev => ({ ...ev, eventType: 'Volcano', sortDate: new Date(ev.geometries[0].date).getTime() }));
 
-    // 3. Filtrar Incendios
+    // 3. Incendios (sin texto: solo coincidencia geográfica)
     const countryFires = firmsFires.filter(fire => {
       if (!fire.latitude || !fire.longitude) return false;
       if (new Date(fire.acq_date).getTime() > timelineDate) return false;
-      
       const lat = parseFloat(fire.latitude);
       const lng = parseFloat(fire.longitude);
-
-      if (countryFeature) {
-        return geoContains(countryFeature, [lng, lat]);
-      } else if (isUS(countryQuery)) {
-        return checkUSBounds(lng, lat);
-      }
+      if (predicate) return predicate(lng, lat);
       return false;
     }).map((fire, i) => ({ ...fire, id: `fire-${i}`, eventType: 'Fire', sortDate: new Date(fire.acq_date).getTime() }));
 
@@ -128,8 +103,13 @@ export default function CountryPanel() {
 
       <div className="p-4 overflow-y-auto space-y-3 flex-1 min-h-0 bg-slate-950/50">
         {countryEvents.length === 0 ? (
-          <div className="text-sm text-slate-500 text-center py-6">
-            No se detectaron eventos recientes en esta región.
+          <div className="flex flex-col items-center text-center gap-3 py-8 px-4 m-1 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/10">
+            <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
+              <SearchX size={22} />
+            </div>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              No hay eventos sísmicos, volcánicos ni incendios activos registrados en este territorio.
+            </p>
           </div>
         ) : (
           countryEvents.map(event => {
