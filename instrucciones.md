@@ -1,17 +1,24 @@
-Actúa como un experto en depuración de UI/UX y React Three Fiber. Estoy desarrollando la aplicación "EarthPulse 3D", pero me estoy encontrando con bugs visuales al combinar el Canvas 3D con la interfaz de Tailwind y el overlay del tutorial. 
+Actúa como un experto en UI/UX y React. Necesito implementar un sistema de alertas/notificaciones (Toasts) para la aplicación "EarthPulse 3D", el cual debe estar perfectamente alineado con nuestra estética "cyber-científica" y de centro de monitoreo espacial.
 
-Necesito que apliques las siguientes correcciones arquitectónicas a mi código:
+REQUERIMIENTO:
+Diseña e implementa un sistema de alertas (puedes integrar 'react-hot-toast', 'sonner' o crear un componente personalizado con Framer Motion). Las alertas deben flotar sobre la interfaz (z-index máximo) sin interrumpir la interacción con el globo 3D. 
+IMPORTANTE: Está estrictamente prohibido utilizar emojis en la interfaz. Para los indicadores de estado, debes utilizar una librería de íconos SVG profesional (como 'lucide-react') o formas geométricas puras construidas con CSS.
 
-1. CORRECCIÓN DE Z-INDEX Y SCROLL:
-Configura el contenedor del `<Canvas>` de Three.js para que ocupe toda la pantalla sin generar barras de desplazamiento (usa 'fixed inset-0 w-full h-full -z-10' en Tailwind o estilos equivalentes). Asegúrate de que los componentes de la interfaz como el Sidebar tengan un 'z-index' superior (ej. z-20) y que el TutorialOverlay esté por encima de todo (ej. z-50).
+ESTÉTICA VISUAL (Usando Tailwind CSS):
+Las tarjetas de alerta deben tener un diseño "Glassmorphism" técnico y limpio: 
+- Fondo oscuro translúcido (ej. bg-slate-950/60 o bg-black/50).
+- Desenfoque de fondo profundo (backdrop-blur-md).
+- Texto principal en blanco (text-white) y texto secundario en gris claro (text-slate-300).
+- Tipografía preferentemente monoespaciada para los códigos de error o fuentes de datos.
 
-2. POST-PROCESAMIENTO PARA LOS MARCADORES (GLOW):
-Los marcadores tienen materiales emisivos pero no brillan de forma realista. Añade la configuración de '@react-three/postprocessing' en el archivo principal. Implementa '<EffectComposer>' con '<Bloom>' controlando el umbral (luminanceThreshold) para que solo brillen los marcadores de eventos y no la textura de la Tierra.
+PALETA DE COLORES NEÓN PARA ESTADOS (USANDO ÍCONOS SVG):
+Cada tipo de alerta debe diferenciarse mediante el color de su acento (borde lateral izquierdo, border-l-4), el color del ícono SVG y un sutil resplandor (drop-shadow), usando los siguientes tonos:
+- Error (Fallo de API, sin conexión): Acento, ícono SVG (ej. AlertCircle o XOctagon) y brillo en Rojo Carmesí Neón (#FF3366).
+- Advertencia (Datos parciales): Acento, ícono SVG (ej. AlertTriangle) y brillo en Ámbar Brillante (#FF9900).
+- Información (Cargando datos, sistema): Acento, ícono SVG (ej. Info o Activity) y brillo en Cian Eléctrico (#00E5FF).
+- Éxito (Datos cargados, conexión lista): Acento, ícono SVG (ej. CheckCircle2) y brillo en Esmeralda Neón (#10B981).
 
-3. CORRECCIÓN DEL CÁLCULO DEL SPOTLIGHT Y RESIZE:
-Si estás usando un componente de tutorial personalizado o react-joyride, asegúrate de que el recorte del fondo oscuro (spotlight) se actualice correctamente si el usuario cambia el tamaño de la ventana. Agrega un listener para el evento 'resize'.
-
-4. CLIPPING DE LA CÁMARA (CORTES 3D):
-Verifica la configuración de la cámara en el Canvas. Ajusta los planos 'near' y 'far' de la cámara (ej. near={0.1} far={1000}) para evitar que la Tierra o los marcadores desaparezcan o se corten de forma extraña al hacer zoom.
-
-Proporcióname los fragmentos de código específicos o las clases de Tailwind que debo reemplazar para estabilizar la vista.
+CÓDIGO REQUERIDO:
+1. La configuración del 'Toaster' global, asegurando que tenga un z-index altísimo (z-[100]) para evitar que el Canvas de Three.js lo cubra.
+2. Los estilos o componentes personalizados (Custom Toasts) aplicando las clases de Tailwind descritas, incorporando la importación de los íconos de 'lucide-react'.
+3. Un ejemplo práctico de cómo disparar esta alerta (ej. un 'toast.error') dentro de un bloque 'try/catch' al consumir la API de NASA EONET o USGS.

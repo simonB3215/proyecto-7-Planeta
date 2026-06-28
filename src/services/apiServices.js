@@ -1,12 +1,18 @@
 import { useStore } from '../store/useStore';
+import { notify } from '../utils/notify';
 
 export const fetchEarthquakes = async () => {
   try {
     const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     useStore.getState().setEarthquakes(data.features || []);
   } catch (error) {
     console.error('Error fetching USGS Earthquakes:', error);
+    notify.error('Sin datos sísmicos', {
+      description: 'No se pudo conectar con el feed de terremotos de USGS.',
+      source: `USGS · ${error.message}`,
+    });
   }
 };
 
@@ -18,6 +24,10 @@ export const fetchEonetEvents = async () => {
     useStore.getState().setEonetEvents(data.events || []);
   } catch (error) {
     console.error('Error fetching NASA EONET, using fallback data:', error);
+    notify.warning('Datos meteorológicos parciales', {
+      description: 'NASA EONET no respondió; mostrando datos de respaldo.',
+      source: 'NASA EONET v3',
+    });
     const today = new Date().toISOString();
     const mockEvents = [
       {
@@ -61,6 +71,10 @@ export const fetchFirmsFires = async () => {
     }
   } catch (error) {
     console.error('CORS o red bloqueó NASA FIRMS. Usando datos de respaldo (Fallback):', error);
+    notify.warning('Anomalías térmicas de respaldo', {
+      description: 'NASA FIRMS bloqueado por CORS; mostrando focos de demostración.',
+      source: 'NASA FIRMS · MODIS',
+    });
     // FALLBACK DE DEMOSTRACIÓN (Para sortear problemas de CORS en el navegador)
     const today = new Date().toISOString();
     const mockFires = [
@@ -96,12 +110,29 @@ export const fetchFirmsFires = async () => {
   }
 };
 
+// Las alertas de info/éxito solo se muestran en la primera sincronización;
+// las recargas periódicas (cada 5 min) son silenciosas salvo que haya errores.
+let firstLoad = true;
+
 export const fetchAllData = async () => {
   useStore.getState().setLoading(true);
+  if (firstLoad) {
+    notify.info('Sincronizando datos satelitales', { source: 'EarthPulse · Uplink' });
+  }
+
   await Promise.allSettled([
     fetchEarthquakes(),
     fetchEonetEvents(),
     fetchFirmsFires()
   ]);
+
   useStore.getState().setLoading(false);
+
+  if (firstLoad) {
+    notify.success('Datos planetarios cargados', {
+      description: 'Monitoreo en tiempo real activo.',
+      source: 'EarthPulse · Online',
+    });
+    firstLoad = false;
+  }
 };

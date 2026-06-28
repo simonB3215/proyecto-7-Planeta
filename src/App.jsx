@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import CountryPanel from './components/CountryPanel';
 import CategoryFilters from './components/CategoryFilters';
 import TutorialSpotlight, { HelpButton } from './components/TutorialSpotlight';
+import { NotificationToaster } from './components/Notifications';
 
 function getEventStyles() {
   return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
@@ -265,6 +266,9 @@ function App() {
 
       {/* Onboarding / Tutorial interactivo con efecto spotlight */}
       <TutorialSpotlight />
+
+      {/* Sistema global de alertas (z-[100], no bloquea el globo 3D) */}
+      <NotificationToaster />
     </div>
   )
 }

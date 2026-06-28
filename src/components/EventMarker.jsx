@@ -2,6 +2,7 @@ import React, { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { Flame, Mountain, Tornado, Zap, Biohazard, MapPin } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getPaletteFor, EVENT_TYPES } from '../utils/palette';
 
@@ -15,11 +16,11 @@ function toVector3(p) {
 }
 
 const TYPE_ICON = {
-  [EVENT_TYPES.FIRE]: '🔥',
-  [EVENT_TYPES.VOLCANO]: '🌋',
-  [EVENT_TYPES.STORM]: '🌪️',
-  [EVENT_TYPES.EARTHQUAKE]: '⚡',
-  [EVENT_TYPES.EXTREME]: '☣️',
+  [EVENT_TYPES.FIRE]: Flame,
+  [EVENT_TYPES.VOLCANO]: Mountain,
+  [EVENT_TYPES.STORM]: Tornado,
+  [EVENT_TYPES.EARTHQUAKE]: Zap,
+  [EVENT_TYPES.EXTREME]: Biohazard,
 };
 
 /**
@@ -165,7 +166,10 @@ function EventMarker({ position, size = 0.012, eventData }) {
           <div className="bg-slate-950/60 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
             <div className="font-bold text-slate-200 mb-2 flex flex-col gap-1">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-base">{TYPE_ICON[eventData.type] || '📍'}</span>
+                {(() => {
+                  const TypeIcon = TYPE_ICON[eventData.type] || MapPin;
+                  return <TypeIcon size={16} style={{ color }} />;
+                })()}
                 <span style={{ color }}>{palette.label}</span>
               </div>
               <div className="flex items-center gap-2 border-t border-white/10 pt-2 mt-1 text-sm">

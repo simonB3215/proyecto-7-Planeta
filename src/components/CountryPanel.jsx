@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Plus, Minus, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
 import { geoContains } from 'd3-geo';
@@ -106,19 +107,19 @@ export default function CountryPanel() {
           </p>
         </div>
         <div className="flex gap-1 z-10">
-          <button 
+          <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-slate-400 hover:text-white transition-colors w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-lg"
+            className="text-slate-400 hover:text-white transition-colors w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center"
             title={isExpanded ? "Minimizar" : "Expandir"}
           >
-            {isExpanded ? '−' : '＋'}
+            {isExpanded ? <Minus size={18} /> : <Plus size={18} />}
           </button>
-          <button 
+          <button
             onClick={clearSelectedCountry}
-            className="text-slate-400 hover:text-white transition-colors w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-lg"
+            className="text-slate-400 hover:text-white transition-colors w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center"
             title="Cerrar"
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
       </div>

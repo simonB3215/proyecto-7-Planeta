@@ -32,6 +32,7 @@ satelital.
 | Renderizado 3D | **Three.js** + **React Three Fiber (R3F)** + **Drei** |
 | Post-procesamiento | **@react-three/postprocessing** (Bloom selectivo) |
 | Animación UI | **Framer Motion** |
+| Notificaciones | **react-hot-toast** (toasts custom) + **lucide-react** (iconos SVG) |
 | Estilos | **TailwindCSS 4** (plugin oficial de Vite) |
 | Estado | **Zustand 5** (con middleware `persist`) |
 | Geoespacial | **d3-geo** (`geoContains` para detección país/punto) |
@@ -94,7 +95,8 @@ src/
 │   ├── Sidebar.jsx          # Tarjeta de detalle del evento seleccionado
 │   ├── Timeline.jsx         # Línea de tiempo / reproducción temporal (30 días)
 │   ├── CategoryFilters.jsx  # Chips de filtrado por categoría (paleta neón)
-│   └── TutorialSpotlight.jsx# Onboarding con efecto spotlight + HelpButton
+│   ├── TutorialSpotlight.jsx# Onboarding con efecto spotlight + HelpButton
+│   └── Notifications.jsx    # Toaster global (react-hot-toast) z-[100]
 │
 ├── store/
 │   ├── useStore.js          # Estado de DATOS (eventos, selección, modos de vista)
@@ -105,7 +107,8 @@ src/
 │
 └── utils/
     ├── geoToVector3.js      # Conversión lat/lng → Vector3 sobre la esfera
-    └── palette.js           # Paleta "Cyber-Scientific" (fuente única de verdad)
+    ├── palette.js           # Paleta "Cyber-Scientific" (fuente única de verdad)
+    └── notify.jsx           # Helper de alertas: notify.error/warning/info/success
 ```
 
 ---
@@ -228,6 +231,36 @@ aplican al render: `show(type)` oculta clústeres/marcadores de categorías desa
 | 4. Detalles | `null` | Overlay completo |
 
 Los targets se marcan con atributos `data-tutorial="..."` en [`App.jsx`](src/App.jsx).
+
+---
+
+## 🔔 Sistema de alertas (Toasts)
+
+Gestionado con **react-hot-toast** (cola + posicionamiento) y render 100% custom. El
+contenedor [`NotificationToaster`](src/components/Notifications.jsx) se monta una sola vez
+en `App` con `z-[100]` y **no captura punteros** (solo las tarjetas), por lo que nunca
+interrumpe la interacción con el globo 3D.
+
+El helper [`notify`](src/utils/notify.jsx) expone cuatro estados, cada uno con su acento
+neón, icono SVG de **lucide-react** y resplandor (`drop-shadow`). **Sin emojis** en toda la UI.
+
+| Estado | Color | Icono (lucide) |
+|--------|-------|----------------|
+| `notify.error` | `#FF3366` Rojo Carmesí | `AlertCircle` |
+| `notify.warning` | `#FF9900` Ámbar | `AlertTriangle` |
+| `notify.info` | `#00E5FF` Cian | `Info` |
+| `notify.success` | `#10B981` Esmeralda | `CheckCircle2` |
+
+```js
+notify.error('Sin datos sísmicos', {
+  description: 'No se pudo conectar con el feed de terremotos de USGS.',
+  source: 'USGS · HTTP 503',   // texto monoespaciado
+});
+```
+
+Integrado en los `try/catch` de [`apiServices.js`](src/services/apiServices.js): error en
+USGS, advertencias al usar respaldo de EONET/FIRMS, e info/éxito solo en la **primera**
+sincronización (las recargas cada 5 min son silenciosas salvo error).
 
 ---
 

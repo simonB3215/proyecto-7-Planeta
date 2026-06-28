@@ -5,6 +5,7 @@ import { latLngToVector3 } from '../utils/geoToVector3';
 import EventMarker from './EventMarker';
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import { Layers } from 'lucide-react';
 import { EVENT_TYPES, getEventColor, eonetCategoryToType } from '../utils/palette';
 
 const GLOBE_RADIUS = 1.01;
@@ -118,7 +119,7 @@ function ClusterMarker({ cluster }) {
         <Html zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
           <div className="bg-slate-950/60 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
             <div className="font-bold text-slate-200 mb-2 flex items-center gap-2 text-sm">
-              <span className="text-base">📍</span>
+              <Layers size={16} style={{ color: clusterColor }} />
               <span>{count} Eventos Agrupados</span>
             </div>
             {cluster.type === EVENT_TYPES.EARTHQUAKE && (
