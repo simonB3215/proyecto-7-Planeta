@@ -49,9 +49,9 @@ function App() {
                 (toneMapped={false} -> superan el umbral de luminancia; la Tierra no). */}
             <EffectComposer disableNormalPass>
               <Bloom
-                luminanceThreshold={1}
-                luminanceSmoothing={0.9}
-                intensity={1.2}
+                luminanceThreshold={0.55}
+                luminanceSmoothing={0.85}
+                intensity={1.1}
                 mipmapBlur
               />
             </EffectComposer>

@@ -76,11 +76,26 @@ export const useAppStore = create(
     }),
     {
       name: 'earthpulse-ui',
+      // v2: las categorías se redujeron a 3 (Incendios, Volcanes, Terremotos).
+      // Subimos la versión para descartar filtros persistidos obsoletos y
+      // garantizar que todas las categorías arranquen visibles.
+      version: 2,
+      migrate: (persisted) => ({ ...(persisted || {}), filters: { ...defaultFilters } }),
       // Solo persistimos lo que debe sobrevivir a recargas.
       partialize: (state) => ({
         hasSeenTutorial: state.hasSeenTutorial,
         filters: state.filters,
       }),
+      // Garantiza que SIEMPRE existan las 3 categorías (evita ocultar todo si el
+      // estado persistido está incompleto o corrupto).
+      merge: (persisted, current) => {
+        const p = persisted || {};
+        return {
+          ...current,
+          ...p,
+          filters: { ...defaultFilters, ...(p.filters || {}) },
+        };
+      },
     }
   )
 );

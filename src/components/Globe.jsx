@@ -143,7 +143,7 @@ export default function Globe() {
 
   return (
     <>
-      <ambientLight intensity={lightingMode === 'full' ? 3 : 0.03} />
+      <ambientLight intensity={lightingMode === 'full' ? 1.5 : 0.03} />
       
       {/* Luz global cuando está en Full (no rota con la Tierra) */}
       {lightingMode === 'full' && (
