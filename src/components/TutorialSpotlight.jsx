@@ -112,7 +112,6 @@ function useTargetRect(selector, active) {
 export default function TutorialSpotlight() {
   const isOpen = useAppStore((s) => s.isTutorialOpen);
   const step = useAppStore((s) => s.tutorialStep);
-  const hasSeen = useAppStore((s) => s.hasSeenTutorial);
   const startTutorial = useAppStore((s) => s.startTutorial);
   const nextStep = useAppStore((s) => s.nextStep);
   const prevStep = useAppStore((s) => s.prevStep);
@@ -132,10 +131,10 @@ export default function TutorialSpotlight() {
     nextStep();
   };
 
-  // Auto-activación en la primera visita.
+  // Mostrar el tutorial cada vez que se carga la página (descartable con Omitir).
   useEffect(() => {
-    if (!hasSeen) startTutorial();
-  }, [hasSeen, startTutorial]);
+    startTutorial();
+  }, [startTutorial]);
 
   if (!current) return null;
 
@@ -253,7 +252,7 @@ export default function TutorialSpotlight() {
                     })}
                   </div>
 
-                  {/* Omitir: cierra el onboarding manteniendo el perfil gráfico por defecto */}
+                  {/* Omitir: cierra el onboarding (mantiene el perfil gráfico actual). */}
                   <button
                     onClick={skipTutorial}
                     className="mt-5 w-full text-center font-mono text-[9px] tracking-widest uppercase text-neutral-500 hover:text-neutral-300 transition-colors"

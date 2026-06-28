@@ -9,39 +9,48 @@ export const GRAPHICS_LEVELS = ['low', 'medium', 'high'];
 export const GRAPHICS_PROFILES = {
   low: {
     label: 'Baja',
-    desc: 'DPR estándar · sin MSAA · malla mínima',
+    desc: 'Sin bloom · DPR 1 · malla mínima · sin adornos',
     dpr: 1,
     multisampling: 0,
-    bloomIntensity: 0.3,
-    earthSegments: 24,
-    markerSphere: 12,
+    bloom: false,          // post-procesado desmontado por completo
+    bloomIntensity: 0,
+    earthSegments: 16,     // esfera del planeta muy ligera
+    markerSphere: 8,       // mínimo razonable de subdivisiones
     markerRing: 16,
     markerWire: 6,
-    clusterSphere: 12,
+    clusterSphere: 10,
+    decorations: false,    // sin halos / anillos / núcleos anidados
+    starCount: 0,          // estrellas desactivadas: vacío negro absoluto
   },
   medium: {
     label: 'Media',
     desc: 'DPR equilibrado · MSAA 4x · malla intermedia',
     dpr: [1, 1.5],
     multisampling: 4,
+    bloom: true,
     bloomIntensity: 0.5,
     earthSegments: 48,
     markerSphere: 32,
     markerRing: 32,
     markerWire: 10,
     clusterSphere: 24,
+    decorations: true,
+    starCount: 1500,
   },
   high: {
     label: 'Alta',
     desc: 'DPR x2 máx · MSAA 8x · geometría HD',
     dpr: [1, 2],
     multisampling: 8,
+    bloom: true,
     bloomIntensity: 0.7,
     earthSegments: 96,
     markerSphere: 64,
     markerRing: 64,
     markerWire: 16,
     clusterSphere: 32,
+    decorations: true,
+    starCount: 2500,
   },
 };
 

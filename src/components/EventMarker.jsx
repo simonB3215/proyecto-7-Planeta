@@ -54,11 +54,12 @@ function EventMarker({
   const isFire = eventData.type === EVENT_TYPES.FIRE;
   const isVolcano = eventData.type === EVENT_TYPES.VOLCANO;
 
-  // Densidad poligonal según el perfil gráfico (baja/media/alta).
+  // Densidad poligonal y adornos según el perfil gráfico (baja/media/alta).
   const gfx = getGraphicsProfile(useStore((s) => s.graphicsMode));
   const sphereSeg = gfx.markerSphere;
   const ringSeg = gfx.markerRing;
   const wireSeg = gfx.markerWire;
+  const decorations = gfx.decorations; // false en baja: solo núcleo, sin extras
 
   // Orienta el anillo sísmico tangente a la superficie del globo (normal radial).
   const ringQuat = useMemo(() => {
@@ -122,20 +123,22 @@ function EventMarker({
 
   return (
     <group position={position}>
-      {/* Malla de telemetría (wireframe fino — sin glow difuso) */}
-      <mesh scale={1.7}>
-        <sphereGeometry args={[size, wireSeg, wireSeg]} />
-        <meshBasicMaterial
-          color={color}
-          wireframe
-          transparent
-          opacity={0.35}
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </mesh>
+      {/* Malla de telemetría (wireframe) — adorno secundario, no en baja calidad */}
+      {decorations && (
+        <mesh scale={1.7}>
+          <sphereGeometry args={[size, wireSeg, wireSeg]} />
+          <meshBasicMaterial
+            color={color}
+            wireframe
+            transparent
+            opacity={0.35}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+      )}
 
-      {/* Núcleo emisivo HD (color inyectado, esfera de 64 segmentos) */}
+      {/* Núcleo emisivo (color inyectado). Es la única malla en calidad baja. */}
       <mesh onClick={handleClick} onPointerOver={handleOver} onPointerOut={handleOut}>
         <sphereGeometry args={[size, sphereSeg, sphereSeg]} />
         <meshStandardMaterial
@@ -147,8 +150,8 @@ function EventMarker({
         />
       </mesh>
 
-      {/* Núcleo interno incandescente para volcanes (coreColor inyectado) */}
-      {isVolcano && (
+      {/* Núcleo interno incandescente para volcanes — adorno, no en baja calidad */}
+      {decorations && isVolcano && (
         <mesh>
           <sphereGeometry args={[size * 0.45, sphereSeg, sphereSeg]} />
           <meshStandardMaterial
@@ -160,8 +163,8 @@ function EventMarker({
         </mesh>
       )}
 
-      {/* Onda sísmica expansiva: barrido de radar (AdditiveBlending) */}
-      {isEarthquake && (
+      {/* Onda sísmica expansiva (anillo) — adorno, no en baja calidad */}
+      {decorations && isEarthquake && (
         <mesh ref={ringRef} quaternion={ringQuat}>
           <ringGeometry args={[size * 1.6, size * 1.9, ringSeg]} />
           <meshBasicMaterial

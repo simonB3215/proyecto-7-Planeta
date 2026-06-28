@@ -4,6 +4,7 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import Globe from './components/Globe';
 import { fetchAllData } from './services/apiServices';
 import { useStore } from './store/useStore';
+import { useAppStore } from './store/useAppStore';
 import { latLngToVector3 } from './utils/geoToVector3';
 import Sidebar from './components/Sidebar';
 import CountryPanel from './components/CountryPanel';
@@ -41,11 +42,19 @@ function App() {
   const setSearchQuery = useStore(state => state.setSearchQuery);
   const timelineDate = useStore(state => state.timelineDate);
 
+  // FASE 1: en la primera visita, la compuerta del tutorial tiene prioridad sobre
+  // la descarga de datos satelitales. Solo arrancamos el fetch cuando el usuario
+  // ya superó la compuerta (eligió perfil -> step > 0) o ya completó la guía.
+  const hasSeenTutorial = useAppStore(state => state.hasSeenTutorial);
+  const tutorialStep = useAppStore(state => state.tutorialStep);
+  const gatePassed = hasSeenTutorial || tutorialStep > 0;
+
   useEffect(() => {
+    if (!gatePassed) return; // diferir mientras la compuerta bloquea la pantalla
     fetchAllData();
     const interval = setInterval(() => fetchAllData(), 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [gatePassed]);
 
   return (
     <div className="w-full h-screen bg-black text-neutral-200 overflow-hidden relative isolate">
@@ -73,16 +82,19 @@ function App() {
             <Globe />
             {/* Post-procesamiento técnico: Bloom nítido tipo LED/láser (umbral alto,
                 poca difusión) que solo afecta a los marcadores emisivos, no a la Tierra. */}
-            {/* MSAA y bloom escalan con el perfil (baja: 0 · media: 4 · alta: 8). */}
-            <EffectComposer multisampling={gfx.multisampling} disableNormalPass>
-              <Bloom
-                luminanceThreshold={1.1}
-                luminanceSmoothing={0.2}
-                intensity={gfx.bloomIntensity}
-                radius={0.4}
-                mipmapBlur
-              />
-            </EffectComposer>
+            {/* En calidad baja el compositor se desmonta por completo (sin bloom).
+                En media/alta escala el MSAA (4x/8x) y la intensidad del resplandor. */}
+            {gfx.bloom && (
+              <EffectComposer multisampling={gfx.multisampling} disableNormalPass>
+                <Bloom
+                  luminanceThreshold={1.1}
+                  luminanceSmoothing={0.2}
+                  intensity={gfx.bloomIntensity}
+                  radius={0.4}
+                  mipmapBlur
+                />
+              </EffectComposer>
+            )}
           </Suspense>
         </Canvas>
       </div>

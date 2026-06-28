@@ -23,8 +23,9 @@ export default function Globe() {
   const geoJsonData = useStore(state => state.geoJsonData);
   const graphicsMode = useStore(state => state.graphicsMode);
 
-  // Subdivisiones de las esferas según el perfil gráfico (baja/media/alta).
-  const sphereSegments = getGraphicsProfile(graphicsMode).earthSegments;
+  // Perfil gráfico: subdivisiones de las esferas y conteo de estrellas.
+  const gfx = getGraphicsProfile(graphicsMode);
+  const sphereSegments = gfx.earthSegments;
   const lastMoveTimeRef = useRef(0);
 
   // Calcular la posición del sol en tiempo real (basado en UTC)
@@ -137,7 +138,9 @@ export default function Globe() {
 
   const handlePointerMove = (e) => {
     e.stopPropagation();
-    if (!e.uv || !geoJsonData || !geoJsonData.features) return;
+    // Guard: el grupo del globo puede no estar montado aún (o estar recreándose
+    // al cambiar de calidad) cuando R3F dispara el hover -> evita el crash.
+    if (!globeRef.current || !e.uv || !e.point || !geoJsonData || !geoJsonData.features) return;
 
     const now = Date.now();
     if (now - lastMoveTimeRef.current < 50) return; // 50ms throttle
@@ -193,7 +196,10 @@ export default function Globe() {
         autoRotate={false}
       />
       
-      <Stars radius={120} depth={60} count={2500} factor={1} saturation={0} fade speed={0} />
+      {/* Estrellas: conteo según perfil (baja: fracción minúscula). */}
+      {gfx.starCount > 0 && (
+        <Stars radius={120} depth={60} count={gfx.starCount} factor={1} saturation={0} fade speed={0} />
+      )}
       
       <group ref={globeRef} position={[0, 0, 0]}>
         <mesh onPointerMove={handlePointerMove} onPointerOut={handlePointerOut} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
