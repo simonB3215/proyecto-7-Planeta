@@ -140,7 +140,10 @@ export default function TutorialSpotlight() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-50 pointer-events-auto"
+          // Solo la compuerta (paso 0) bloquea la interacción. En el resto de pasos
+          // el overlay deja pasar los punteros (solo la tarjeta es interactiva), para
+          // que puedas arrastrar/rotar el planeta mientras el tutorial flota.
+          className={`fixed inset-0 z-50 ${isGate ? 'pointer-events-auto' : 'pointer-events-none'}`}
         >
           {/* Capa oscura con recorte (spotlight) mediante máscara SVG */}
           <svg className="absolute inset-0 w-full h-full" aria-hidden="true">
@@ -182,8 +185,9 @@ export default function TutorialSpotlight() {
             />
           )}
 
-          {/* Diálogo SIEMPRE centrado en pantalla */}
-          <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+          {/* Compuerta: diálogo centrado (modal). Resto de pasos: abajo, para no
+              tapar el centro del globo y dejarlo libre para arrastrar. */}
+          <div className={`absolute inset-0 flex justify-center p-4 pointer-events-none ${isGate ? 'items-center' : 'items-end pb-20'}`}>
             <motion.div
               key={current.id}
               initial={{ scale: 0.92, opacity: 0, y: 18 }}

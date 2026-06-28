@@ -2,13 +2,13 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useStore } from '../store/useStore';
 import { useEffect, useRef } from 'react';
 
-export default function CameraController({ controlsRef, globeRef }) {
+export default function CameraController({ controlsRef, globeRef, cancelFlyRef }) {
   const selectedEvent = useStore(state => state.selectedEvent);
   const { camera } = useThree();
   const isFlying = useRef(false);
   const targetDist = useRef(2.8);
 
-  // Cuando se selecciona un nuevo evento, guardamos la distancia deseada y activamos el vuelo
+  // Al seleccionar un nuevo evento: guardamos la distancia y activamos el vuelo.
   useEffect(() => {
     if (selectedEvent && selectedEvent.pos) {
       const currentDist = camera.position.length();
@@ -17,42 +17,32 @@ export default function CameraController({ controlsRef, globeRef }) {
     }
   }, [selectedEvent, camera]);
 
-  // Si el usuario interactúa manualmente, cancelamos el vuelo automático
+  // Exponemos la cancelación del vuelo. OrbitControls la invoca vía su prop `onStart`
+  // (drei la conecta de forma fiable), de modo que en cuanto el usuario empieza a
+  // arrastrar, el vuelo automático se detiene y NO pelea con la interacción manual.
   useEffect(() => {
-    const controls = controlsRef.current;
-    const onInteract = () => { isFlying.current = false; };
-    
-    if (controls) {
-      controls.addEventListener('start', onInteract);
-    }
-    return () => {
-      if (controls) controls.removeEventListener('start', onInteract);
-    };
-  }, [controlsRef]);
+    if (!cancelFlyRef) return undefined;
+    cancelFlyRef.current = () => { isFlying.current = false; };
+    return () => { cancelFlyRef.current = null; };
+  }, [cancelFlyRef]);
 
   useFrame(() => {
-    if (isFlying.current && globeRef.current && selectedEvent?.pos) {
-      // 1. Tomar la posición local estática del evento
-      const localPos = selectedEvent.pos.clone();
-      
-      // 2. Aplicar la rotación ACTUAL de la Tierra para obtener la posición real en el mundo 3D
-      const worldPos = localPos.applyEuler(globeRef.current.rotation);
-      
-      // 3. Proyectar el vector a la distancia deseada de la cámara
-      const camPos = worldPos.normalize().multiplyScalar(targetDist.current);
-      
-      // 4. Volar suavemente hacia esa posición en el mundo
-      camera.position.lerp(camPos, 0.05);
-      
-      if (controlsRef.current) {
-        controlsRef.current.target.set(0, 0, 0);
-        controlsRef.current.update();
-      }
+    if (!isFlying.current || !globeRef.current || !selectedEvent?.pos) return;
 
-      // 5. Detener el vuelo cuando esté suficientemente cerca
-      if (camera.position.distanceTo(camPos) < 0.05) {
-        isFlying.current = false;
-      }
+    // Posición local del evento -> mundo (aplicando la rotación actual del globo).
+    const worldPos = selectedEvent.pos.clone().applyEuler(globeRef.current.rotation);
+    const camPos = worldPos.normalize().multiplyScalar(targetDist.current);
+
+    camera.position.lerp(camPos, 0.08);
+
+    if (controlsRef.current) {
+      controlsRef.current.target.set(0, 0, 0);
+      controlsRef.current.update();
+    }
+
+    // Detener el vuelo al llegar suficientemente cerca.
+    if (camera.position.distanceTo(camPos) < 0.05) {
+      isFlying.current = false;
     }
   });
 

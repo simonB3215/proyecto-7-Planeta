@@ -16,6 +16,9 @@ export default function Globe() {
   const controlsRef = useRef();
   const timeoutRef = useRef();
   const pointerDownRef = useRef({ x: 0, y: 0 });
+  // Lo rellena CameraController; OrbitControls lo invoca al empezar a arrastrar
+  // para cancelar el vuelo automático (evita que la cámara pelee con el usuario).
+  const cancelFlyRef = useRef(null);
   const [hoveredCountry, setHoveredCountry] = useState(null);
   
   const isRotating = useStore(state => state.isRotating);
@@ -183,9 +186,9 @@ export default function Globe() {
         <directionalLight position={[10, 10, 10]} intensity={2.4} />
       )}
       
-      <CameraController controlsRef={controlsRef} globeRef={globeRef} />
-      
-      <OrbitControls 
+      <CameraController controlsRef={controlsRef} globeRef={globeRef} cancelFlyRef={cancelFlyRef} />
+
+      <OrbitControls
         ref={controlsRef}
         enablePan={false}
         enableZoom={true}
@@ -194,6 +197,8 @@ export default function Globe() {
         enableDamping={true}
         dampingFactor={0.05}
         autoRotate={false}
+        makeDefault
+        onStart={() => { if (cancelFlyRef.current) cancelFlyRef.current(); }}
       />
       
       {/* Estrellas: conteo según perfil (baja: fracción minúscula). */}
