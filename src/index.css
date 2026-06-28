@@ -15,10 +15,16 @@
 }
 
 @layer components {
+  /* Glassmorphism "centro de comando satelital" — Requerimiento 1 */
   .glass-panel {
-    @apply bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-xl;
+    @apply bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-lg shadow-xl;
   }
-  
+
+  /* Variante para tarjetas/info flotantes */
+  .glass-card {
+    @apply bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl;
+  }
+
   .tech-text {
     @apply font-mono text-sm tracking-wider uppercase;
   }
@@ -31,15 +37,18 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5); /* slate-950/50 */
+  background: rgba(15, 23, 42, 0.5);
+  /* slate-950/50 */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.8); /* slate-700/80 */
+  background: rgba(51, 65, 85, 0.8);
+  /* slate-700/80 */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(71, 85, 105, 1); /* slate-600 */
+  background: rgba(71, 85, 105, 1);
+  /* slate-600 */
 }

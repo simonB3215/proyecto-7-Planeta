@@ -6,6 +6,8 @@ import { useStore } from './store/useStore';
 import { latLngToVector3 } from './utils/geoToVector3';
 import Sidebar from './components/Sidebar';
 import CountryPanel from './components/CountryPanel';
+import CategoryFilters from './components/CategoryFilters';
+import TutorialOverlay, { HelpButton } from './components/TutorialOverlay';
 
 function getEventStyles(mag) {
   return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
@@ -95,7 +97,10 @@ function App() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-slate-900/60 border border-slate-700 text-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 transition-colors"
               />
-              
+
+              {/* Filtros por categoría */}
+              <CategoryFilters />
+
               {/* Global Stats */}
               {!isLoading && (
                 <div className="grid grid-cols-2 gap-2 text-xs mt-1 mb-3">
@@ -205,6 +210,8 @@ function App() {
 
         {/* Global Controls */}
         <div className="absolute bottom-6 right-6 z-30 pointer-events-auto flex gap-3">
+          <HelpButton />
+
           <button 
             onClick={toggleRadarMode}
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-2xl border ${radarMode ? 'bg-emerald-500/80 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-emerald-500 hover:text-white'}`}
@@ -244,6 +251,9 @@ function App() {
         </div>
 
       </div>
+
+      {/* Onboarding / Tutorial interactivo */}
+      <TutorialOverlay />
     </div>
   )
 }

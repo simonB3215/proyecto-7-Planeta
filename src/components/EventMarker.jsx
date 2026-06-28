@@ -1,149 +1,184 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
-import { useStore } from '../store/useStore';
 import * as THREE from 'three';
+import { useStore } from '../store/useStore';
+import { getPaletteFor, EVENT_TYPES } from '../utils/palette';
 
-export default function EventMarker({ position, color, size, eventData }) {
-  const selectedEvent = useStore(state => state.selectedEvent);
-  const setSelectedEvent = useStore(state => state.setSelectedEvent);
-  const clearSelectedEvent = useStore(state => state.clearSelectedEvent);
-  
-  const waveRef = useRef();
+const UP_Z = new THREE.Vector3(0, 0, 1);
+
+// Acepta un THREE.Vector3 o un array [x,y,z].
+function toVector3(p) {
+  if (p instanceof THREE.Vector3) return p;
+  if (Array.isArray(p)) return new THREE.Vector3(p[0], p[1], p[2]);
+  return new THREE.Vector3();
+}
+
+const TYPE_ICON = {
+  [EVENT_TYPES.FIRE]: '🔥',
+  [EVENT_TYPES.VOLCANO]: '🌋',
+  [EVENT_TYPES.STORM]: '🌪️',
+  [EVENT_TYPES.EARTHQUAKE]: '⚡',
+  [EVENT_TYPES.EXTREME]: '☣️',
+};
+
+/**
+ * Marcador 3D individual con materiales neón emisivos (paleta Cyber-Scientific).
+ * - Incendios: parpadeo (flicker).
+ * - Volcanes: núcleo blanco brillante.
+ * - Tormentas: esfera translúcida.
+ * - Terremotos: anillo (RingGeometry) que se expande como onda sísmica.
+ */
+function EventMarker({ position, size = 0.012, eventData }) {
+  const setSelectedEvent = useStore((s) => s.setSelectedEvent);
+  // Selector derivado a booleano: solo re-renderiza al cambiar la selección de ESTE marcador.
+  const isSelected = useStore((s) => s.selectedEvent?.id === eventData.id);
+
   const [isHovered, setIsHovered] = useState(false);
-  
-  const isEarthquake = eventData.type === 'Earthquake';
-  const isFire = eventData.type === 'Fire';
-  const isSelected = selectedEvent?.id === eventData.id;
 
-  const coreMaterialRef = useRef();
-  
-  useFrame((state, delta) => {
+  const palette = useMemo(() => getPaletteFor(eventData.type), [eventData.type]);
+  const { color, emissiveIntensity } = palette;
+
+  const isEarthquake = eventData.type === EVENT_TYPES.EARTHQUAKE;
+  const isFire = eventData.type === EVENT_TYPES.FIRE;
+  const isVolcano = eventData.type === EVENT_TYPES.VOLCANO;
+  const isStorm = eventData.type === EVENT_TYPES.STORM;
+
+  // Orienta el anillo sísmico tangente a la superficie del globo (normal = dirección radial).
+  const ringQuat = useMemo(() => {
+    const dir = toVector3(position).clone().normalize();
+    return new THREE.Quaternion().setFromUnitVectors(UP_Z, dir);
+  }, [position]);
+
+  const coreMatRef = useRef();
+  const ringRef = useRef();
+  const ringMatRef = useRef();
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
     const radarMode = useStore.getState().radarMode;
+
+    // Pulso global de radar (todos los marcadores laten al unísono, nunca a 0).
     let radarIntensity = 1;
-    
     if (radarMode) {
-      // Pulso global sincronizado (todas las luces a la vez)
-      const pulse = Math.sin(state.clock.elapsedTime * 2.0) * 0.5 + 0.5;
-      const pulseIntensity = Math.pow(pulse, 1.5); // Curva suave
-      radarIntensity = 0.2 + (pulseIntensity * 0.8); // Nunca desaparece por completo (mínimo 20%)
-      
-      if (coreMaterialRef.current) {
-        coreMaterialRef.current.transparent = true;
-        coreMaterialRef.current.opacity = radarIntensity;
-      }
-    } else if (coreMaterialRef.current && coreMaterialRef.current.opacity !== 1) {
-      coreMaterialRef.current.opacity = 1;
-      coreMaterialRef.current.transparent = false;
+      const pulse = Math.pow(Math.sin(t * 2.0) * 0.5 + 0.5, 1.5);
+      radarIntensity = 0.2 + pulse * 0.8;
     }
 
-    if (isEarthquake && waveRef.current) {
-      const mag = eventData.mag || 1;
-      const speed = 1.0 + (mag * 0.2);
-      const maxScale = mag * 1.2;
-      
-      waveRef.current.scale.x += delta * speed;
-      waveRef.current.scale.y += delta * speed;
-      waveRef.current.scale.z += delta * speed;
-      
-      const currentScale = waveRef.current.scale.x;
-      const waveOpacity = 0.8 * (1 - (currentScale - 1) / (maxScale - 1));
-      
-      if (currentScale > maxScale) {
-        waveRef.current.scale.set(1, 1, 1);
-        waveRef.current.material.opacity = radarMode ? 0.8 * radarIntensity : 0.8;
-      } else {
-        waveRef.current.material.opacity = radarMode ? Math.max(0, waveOpacity * radarIntensity) : Math.max(0, waveOpacity);
-      }
+    // Flicker para incendios (ruido pseudo-aleatorio combinando dos senoidales).
+    let flicker = 1;
+    if (isFire) {
+      flicker = 0.65 + Math.abs(Math.sin(t * 18) * Math.sin(t * 7.3)) * 0.6;
     }
-    
-    if (isFire && waveRef.current) {
-      const pulse = Math.sin(state.clock.elapsedTime * 5) * 0.5 + 0.5;
-      const baseOpacity = 0.3 + (pulse * 0.5);
-      waveRef.current.material.opacity = radarMode ? baseOpacity * radarIntensity : baseOpacity;
-      waveRef.current.scale.setScalar(1.2 + (pulse * 0.3));
+
+    if (coreMatRef.current) {
+      coreMatRef.current.emissiveIntensity =
+        emissiveIntensity * flicker * (radarMode ? radarIntensity : 1);
+    }
+
+    // Onda sísmica: el anillo crece y se desvanece en bucle.
+    if (isEarthquake && ringRef.current && ringMatRef.current) {
+      const mag = eventData.mag || 2;
+      const period = Math.max(1.6, 3.2 - mag * 0.15); // sismos fuertes pulsan más rápido
+      const phase = (t % period) / period; // 0 -> 1
+      const scale = 1 + phase * (1.5 + mag * 0.6);
+      ringRef.current.scale.set(scale, scale, scale);
+      ringMatRef.current.opacity = (1 - phase) * 0.9 * (radarMode ? radarIntensity : 1);
     }
   });
-
-  const handlePointerOver = (e) => {
-    e.stopPropagation();
-    document.body.style.cursor = 'pointer';
-    setIsHovered(true);
-  };
-
-  const handlePointerOut = (e) => {
-    e.stopPropagation();
-    document.body.style.cursor = 'default';
-    setIsHovered(false);
-  };
 
   const handleClick = (e) => {
     e.stopPropagation();
     setSelectedEvent(eventData);
   };
+  const handleOver = (e) => {
+    e.stopPropagation();
+    document.body.style.cursor = 'pointer';
+    setIsHovered(true);
+  };
+  const handleOut = (e) => {
+    e.stopPropagation();
+    document.body.style.cursor = 'default';
+    setIsHovered(false);
+  };
 
   return (
     <group position={position}>
-      <mesh 
-        onClick={handleClick}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-      >
+      {/* Halo / glow aditivo (más amplio y suave en tormentas) */}
+      <mesh scale={isStorm ? 1.9 : 1.5}>
         <sphereGeometry args={[size, 16, 16]} />
-        <meshStandardMaterial 
-          ref={coreMaterialRef}
+        <meshBasicMaterial
           color={color}
-          emissive={color}
-          emissiveIntensity={2}
+          transparent
+          opacity={isStorm ? 0.16 : 0.25}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
           toneMapped={false}
         />
       </mesh>
-      
-      {(isEarthquake || isFire) && (
-        <mesh ref={waveRef}>
-          <sphereGeometry args={[size, 16, 16]} />
-          {isEarthquake ? (
-            <meshBasicMaterial 
-              color={color} 
-              wireframe={true} 
-              transparent={true} 
-              opacity={0.8} 
-              depthWrite={false}
-            />
-          ) : (
-            <meshBasicMaterial 
-              color="#ffaa00" 
-              transparent={true} 
-              opacity={0.5} 
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-            />
-          )}
+
+      {/* Núcleo emisivo neón (interactivo) */}
+      <mesh onClick={handleClick} onPointerOver={handleOver} onPointerOut={handleOut}>
+        <sphereGeometry args={[size, 20, 20]} />
+        <meshStandardMaterial
+          ref={coreMatRef}
+          color={color}
+          emissive={color}
+          emissiveIntensity={emissiveIntensity}
+          transparent={isStorm}
+          opacity={isStorm ? 0.5 : 1}
+          toneMapped={false}
+        />
+      </mesh>
+
+      {/* Núcleo blanco incandescente para volcanes */}
+      {isVolcano && (
+        <mesh>
+          <sphereGeometry args={[size * 0.45, 16, 16]} />
+          <meshStandardMaterial
+            color="#FFFFFF"
+            emissive="#FFFFFF"
+            emissiveIntensity={3}
+            toneMapped={false}
+          />
+        </mesh>
+      )}
+
+      {/* Onda sísmica expansiva (anillo tangente a la superficie) */}
+      {isEarthquake && (
+        <mesh ref={ringRef} quaternion={ringQuat}>
+          <ringGeometry args={[size * 1.6, size * 2.1, 48]} />
+          <meshBasicMaterial
+            ref={ringMatRef}
+            color={color}
+            transparent
+            opacity={0.9}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+            toneMapped={false}
+          />
         </mesh>
       )}
 
       {(isHovered || isSelected) && (
         <Html zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
-          <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-slate-700 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
+          <div className="bg-slate-950/60 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10 w-max transform -translate-x-1/2 -translate-y-full mb-4 pointer-events-none transition-all">
             <div className="font-bold text-slate-200 mb-2 flex flex-col gap-1">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-base">📍</span>
-                <span>1 Evento Individual</span>
+                <span className="text-base">{TYPE_ICON[eventData.type] || '📍'}</span>
+                <span style={{ color }}>{palette.label}</span>
               </div>
-              <div className="flex items-center gap-2 border-t border-slate-700 pt-2 mt-1 text-sm">
-                {isFire && <span className="text-red-500 text-base">🔥</span>}
-                {isEarthquake && <span className="text-orange-500 text-base">⚡</span>}
-                {eventData.type === 'Storm' && <span className="text-blue-500 text-base">🌪️</span>}
+              <div className="flex items-center gap-2 border-t border-white/10 pt-2 mt-1 text-sm">
                 <span className="truncate max-w-[250px] block">{eventData.title}</span>
               </div>
             </div>
-            
-            {isEarthquake && (
-              <div className="text-xs text-orange-400 font-bold mb-1">
+
+            {isEarthquake && eventData.mag != null && (
+              <div className="text-xs font-bold mb-1" style={{ color }}>
                 Magnitud: {eventData.mag}
               </div>
             )}
-            
+
             <div className="text-[11px] text-slate-400 mt-2">
               {new Date(eventData.date).toLocaleString()}
             </div>
@@ -153,3 +188,6 @@ export default function EventMarker({ position, color, size, eventData }) {
     </group>
   );
 }
+
+// Memoizado: evita re-renders cuando cambian otras partes del estado global.
+export default React.memo(EventMarker);
