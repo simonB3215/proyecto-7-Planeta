@@ -30,6 +30,7 @@ satelital.
 |------|-----------|
 | Framework | **React 19** + **Vite 8** |
 | Renderizado 3D | **Three.js** + **React Three Fiber (R3F)** + **Drei** |
+| Post-procesamiento | **@react-three/postprocessing** (Bloom selectivo) |
 | Animación UI | **Framer Motion** |
 | Estilos | **TailwindCSS 4** (plugin oficial de Vite) |
 | Estado | **Zustand 5** (con middleware `persist`) |
@@ -48,9 +49,14 @@ La app sigue una arquitectura de **capas superpuestas (z-index)**:
 │  z-30  Controles globales + HelpButton        │
 │  z-20  Sidebar / CountryPanel (paneles)       │
 │  z-10  Header + capa UI (pointer-events-none) │
-│  z-0   Canvas 3D (Globo, marcadores, estrellas)│
+│  z-0   Grid overlay decorativo                │
+│ -z-10  Canvas 3D fijo (Globo, marcadores...)  │
 └─────────────────────────────────────────────┘
 ```
+
+El `<Canvas>` usa `fixed inset-0 w-full h-full -z-10` para ocupar todo el viewport sin
+generar scrollbars y quedar detrás de la UI. La cámara fija `near={0.1}` / `far={1000}`
+para evitar cortes (clipping) de la Tierra o los marcadores al hacer zoom.
 
 - La **capa UI** usa `pointer-events-none` por defecto y reactiva los eventos
   (`pointer-events-auto`) solo en los elementos interactivos, de modo que los clics
@@ -184,6 +190,9 @@ Fuente única de verdad reutilizada por marcadores 3D, chips de filtro y tooltip
 - **Flicker** de incendios mediante ruido pseudo-aleatorio de dos senoidales en `useFrame`.
 - Las animaciones mutan **refs de materiales** dentro de `useFrame` (no disparan renders React).
 - Componente `React.memo` + selectores Zustand derivados a booleano → mínimos re-renders.
+- **Bloom selectivo**: el `<EffectComposer><Bloom/></EffectComposer>` (en [`App.jsx`](src/App.jsx))
+  usa `luminanceThreshold={1}`. Como los marcadores llevan `toneMapped={false}` superan ese
+  umbral y brillan; la textura de la Tierra (tone-mapped) queda por debajo y **no** hace bloom.
 
 ### Clustering — [`Markers.jsx`](src/components/Markers.jsx)
 

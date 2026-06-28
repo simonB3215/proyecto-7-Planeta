@@ -1,5 +1,6 @@
 import { Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import Globe from './components/Globe';
 import { fetchAllData } from './services/apiServices';
 import { useStore } from './store/useStore';
@@ -38,11 +39,21 @@ function App() {
   return (
     <div className="w-full h-screen bg-slate-950 text-slate-200 overflow-hidden relative">
       
-      {/* 3D Canvas Layer (Z-0) */}
-      <div data-tutorial="canvas" className="absolute inset-0 z-0">
-        <Canvas camera={{ position: [0, 0, 2.8], fov: 45 }}>
+      {/* 3D Canvas Layer — fijo a pantalla completa, detrás de la UI (sin scrollbars) */}
+      <div data-tutorial="canvas" className="fixed inset-0 w-full h-full -z-10">
+        <Canvas camera={{ position: [0, 0, 2.8], fov: 45, near: 0.1, far: 1000 }}>
           <Suspense fallback={null}>
             <Globe />
+            {/* Post-procesamiento: el Bloom solo afecta a los marcadores emisivos
+                (toneMapped={false} -> superan el umbral de luminancia; la Tierra no). */}
+            <EffectComposer disableNormalPass>
+              <Bloom
+                luminanceThreshold={1}
+                luminanceSmoothing={0.9}
+                intensity={1.2}
+                mipmapBlur
+              />
+            </EffectComposer>
           </Suspense>
         </Canvas>
       </div>
