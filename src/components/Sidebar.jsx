@@ -1,4 +1,3 @@
-import React from 'react';
 import { useStore } from '../store/useStore';
 
 export default function Sidebar() {
@@ -16,7 +15,7 @@ export default function Sidebar() {
     return "Terremoto severo";
   };
 
-  const getMagnitudeColor = (mag) => {
+  const getMagnitudeColor = () => {
     return "text-orange-400 font-bold";
   };
 
@@ -79,7 +78,7 @@ export default function Sidebar() {
           <div className="bg-gray-800/40 p-3 rounded-md border border-gray-700/50">
             <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Intensidad</div>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`font-mono text-xl ${getMagnitudeColor(selectedEvent.mag)}`}>
+              <span className={`font-mono text-xl ${getMagnitudeColor()}`}>
                 {parseFloat(selectedEvent.mag).toFixed(1)}
               </span>
               <span className="text-gray-300">({getMagnitudeDescription(selectedEvent.mag)})</span>

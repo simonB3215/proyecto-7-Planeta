@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 
 export default function Timeline() {
   const { timelineDate, setTimelineDate, isPlaying, togglePlaying } = useStore();
 
-  const maxDate = Date.now();
+  // "Ahora" se fija al montar (Date.now() es impuro y no debe llamarse en render).
+  const [maxDate] = useState(() => Date.now());
   // Asumimos un historial de 30 días para los datos (típico de USGS y FIRMS)
   const minDate = maxDate - (30 * 24 * 60 * 60 * 1000);
 

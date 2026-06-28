@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { EVENT_PALETTE } from '../utils/palette';
 

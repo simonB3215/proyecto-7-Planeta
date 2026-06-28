@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { useAppStore } from '../store/useAppStore';
 import { latLngToVector3 } from '../utils/geoToVector3';

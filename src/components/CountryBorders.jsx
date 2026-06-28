@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import * as THREE from 'three';
 import { useStore } from '../store/useStore';
 
 const CountryBorders = React.memo(() => {

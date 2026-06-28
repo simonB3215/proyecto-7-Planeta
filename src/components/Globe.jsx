@@ -41,7 +41,9 @@ export default function Globe() {
     const y = (radius * Math.cos(phi));
     
     return [x, y, z];
-  }, [lightingMode]); // Recalcular solo cuando se cambia el modo para actualizar la luz
+    // Recalcular solo al cambiar el modo de iluminación (refresca la posición del sol).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightingMode]);
   
   // Generar textura fotorealista del Sol por código (sin descargar imágenes extra)
   const sunTexture = useMemo(() => {
@@ -63,11 +65,10 @@ export default function Globe() {
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  // Usaremos texturas públicas de Three.js para la Tierra y Nubes
-  const [colorMap, bumpMap, cloudMap, nightMap] = useLoader(THREE.TextureLoader, [
+  // Texturas públicas de Three.js para la Tierra (color, normales y luces nocturnas).
+  const [colorMap, bumpMap, nightMap] = useLoader(THREE.TextureLoader, [
     'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg',
     'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_normal_2048.jpg',
-    'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_clouds_1024.png',
     'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_lights_2048.png'
   ]);
 

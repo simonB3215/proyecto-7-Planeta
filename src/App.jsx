@@ -10,7 +10,7 @@ import CountryPanel from './components/CountryPanel';
 import CategoryFilters from './components/CategoryFilters';
 import TutorialSpotlight, { HelpButton } from './components/TutorialSpotlight';
 
-function getEventStyles(mag) {
+function getEventStyles() {
   return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
 }
 
@@ -37,7 +37,7 @@ function App() {
   }, []);
 
   return (
-    <div className="w-full h-screen bg-slate-950 text-slate-200 overflow-hidden relative">
+    <div className="w-full h-screen bg-slate-950 text-slate-200 overflow-hidden relative isolate">
       
       {/* 3D Canvas Layer — fijo a pantalla completa, detrás de la UI (sin scrollbars) */}
       <div data-tutorial="canvas" className="fixed inset-0 w-full h-full -z-10">

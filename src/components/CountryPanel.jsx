@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { latLngToVector3 } from '../utils/geoToVector3';
 import { geoContains } from 'd3-geo';
 
-function getEventStyles(mag) {
+function getEventStyles() {
   return { border: 'border-orange-500', text: 'text-orange-400', bg: 'bg-orange-950/20 hover:bg-orange-900/40' };
 }
 

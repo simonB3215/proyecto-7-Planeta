@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useId } from 'react';
+import { useEffect, useState, useCallback, useId } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAppStore, TUTORIAL_STEPS } from '../store/useAppStore';
 
@@ -81,8 +81,8 @@ function useTargetRect(selector, active) {
 
   useEffect(() => {
     if (!active) return;
-    // Medimos tras el commit del layout y reaccionamos a resize/scroll.
-    measure();
+    // Medimos en el siguiente frame (evita setState síncrono en el effect) y
+    // reaccionamos a cambios de tamaño de ventana / scroll.
     const raf = requestAnimationFrame(measure);
     window.addEventListener('resize', measure);
     window.addEventListener('scroll', measure, true);
