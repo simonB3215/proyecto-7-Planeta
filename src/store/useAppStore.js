@@ -18,26 +18,32 @@ const defaultFilters = ALL_CATEGORIES.reduce((acc, type) => {
   return acc;
 }, {});
 
+// `target`: selector CSS del elemento a resaltar con el spotlight (null = sin recorte,
+// overlay completo y diálogo centrado).
 export const TUTORIAL_STEPS = [
   {
     id: 'welcome',
     title: 'Bienvenido a EarthPulse 3D',
     body: 'Monitoreo planetario en tiempo real.',
+    target: null,
   },
   {
     id: 'globe',
-    title: 'Control del Globo',
+    title: 'Navegación',
     body: 'Arrastra para rotar el planeta, usa la rueda del mouse para hacer zoom.',
+    target: '[data-tutorial="canvas"]',
   },
   {
     id: 'filters',
     title: 'Filtros',
-    body: 'Usa el panel lateral para filtrar eventos por categoría.',
+    body: 'Usa este panel para ocultar o mostrar eventos por categoría.',
+    target: '[data-tutorial="sidebar"]',
   },
   {
     id: 'details',
     title: 'Detalles',
-    body: 'Haz clic en cualquier marcador brillante sobre el globo para ver sus datos específicos.',
+    body: 'Haz clic en cualquier marcador brillante para ver los datos específicos del evento.',
+    target: null,
   },
 ];
 
