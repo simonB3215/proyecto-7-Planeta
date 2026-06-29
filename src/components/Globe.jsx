@@ -141,6 +141,10 @@ export default function Globe() {
 
   const handlePointerMove = (e) => {
     e.stopPropagation();
+    // Mientras se arrastra (algún botón pulsado) NO calculamos el hover de país:
+    // geoContains sobre todos los polígonos es costoso y provoca tirones que
+    // bloquean la rotación, sobre todo en equipos lentos.
+    if (e.buttons) return;
     // Guard: el grupo del globo puede no estar montado aún (o estar recreándose
     // al cambiar de calidad) cuando R3F dispara el hover -> evita el crash.
     if (!globeRef.current || !e.uv || !e.point || !geoJsonData || !geoJsonData.features) return;
